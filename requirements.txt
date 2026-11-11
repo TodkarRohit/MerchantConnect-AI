@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+twilio
+google-generativeai
+python-dotenv
+httpx
+jinja2
+aiofiles
+python-multipart

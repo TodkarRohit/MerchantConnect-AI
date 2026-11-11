@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paytm AI Sales Teammate — Manager Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paytm: {
+              dark: '#002970',
+              blue: '#00BAF2',
+              light: '#e8f4fd',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; }
+    .badge { @apply px-2 py-1 rounded-full text-xs font-semibold; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; }
+    .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+    .chat-bubble-agent { background: #002970; color: white; border-radius: 18px 18px 18px 4px; }
+    .chat-bubble-merchant { background: #f0f0f0; color: #333; border-radius: 18px 18px 4px 18px; }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .stat-card { transition: transform 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+  <!-- Header -->
+  <header class="bg-paytm-dark text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 bg-paytm-blue rounded-full flex items-center justify-center text-xl font-bold">P</div>
+        <div>
+          <h1 class="text-xl font-bold"><span class="text-paytm-blue">Paytm</span> AI Sales Teammate</h1>
+          <p class="text-xs text-blue-200">Manager Dashboard — Track 3: Autonomous AI Teammates</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm">
+          <div class="pulse-dot w-2 h-2 bg-green-400 rounded-full"></div>
+          <span class="text-green-300">AI Agent Active</span>
+        </div>
+        <button onclick="resetDemo()" class="bg-red-700 hover:bg-red-600 px-3 py-1 rounded text-xs transition">
+          🔄 Reset Demo
+        </button>
+        <button onclick="loadData()" class="bg-paytm-blue hover:bg-blue-400 px-3 py-1 rounded text-xs transition">
+          ↺ Refresh
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="stats-container">
+      <!-- Injected by JS -->
+      <div class="col-span-2 md:col-span-5 text-center text-gray-400 py-4">Loading stats...</div>
+    </div>
+
+    <!-- Action Bar -->
+    <div class="bg-white rounded-xl shadow p-4 mb-6 flex flex-wrap gap-3 items-center justify-between">
+      <div>
+        <h2 class="font-bold text-paytm-dark text-lg">Lead Management</h2>
+        <p class="text-sm text-gray-500">Monitor and manage all merchant leads in real-time</p>
+      </div>
+      <div class="flex gap-3 flex-wrap">
+        <button onclick="startAllOutreach()"
+          class="bg-paytm-dark hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+          🚀 Start All Outreach
+        </button>
+        <button onclick="runFollowUps()"
+          class="bg-paytm-blue hover:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
+          🔁 Run Follow-Ups
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed top-4 right-4 z-50 hidden max-w-sm">
+      <div class="bg-white border-l-4 border-paytm-blue rounded-lg shadow-lg p-4 flex items-start gap-3">
+        <span id="toast-icon" class="text-xl">✅</span>
+        <div>
+          <p id="toast-title" class="font-semibold text-sm text-gray-800"></p>
+          <p id="toast-msg" class="text-xs text-gray-500 mt-1"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leads Table -->
+    <div class="bg-white rounded-xl shadow overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-paytm-dark text-white">
+              <th class="text-left px-4 py-3 font-semibold">Merchant</th>
+              <th class="text-left px-4 py-3 font-semibold">Business</th>
+              <th class="text-left px-4 py-3 font-semibold hidden md:table-cell">City</th>
+              <th class="text-left px-4 py-3 font-semibold">Status</th>
+              <th class="text-left px-4 py-3 font-semibold">Lead Score</th>
+              <th class="text-left px-4 py-3 font-semibold hidden lg:table-cell">Last Contact</th>
+              <th class="text-left px-4 py-3 font-semibold hidden lg:table-cell">Msgs</th>
+              <th class="text-left px-4 py-3 font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leads-tbody">
+            <tr>
+              <td colspan="8" class="text-center py-8 text-gray-400">Loading leads...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Simulate Reply Panel -->
+    <div class="bg-white rounded-xl shadow p-4 mt-6">
+      <h3 class="font-bold text-paytm-dark mb-3">🧪 Demo: Simulate Merchant Reply</h3>
+      <div class="flex gap-3 flex-wrap">
+        <select id="sim-lead-select" class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48">
+          <option value="">Select a lead...</option>
+        </select>
+        <input type="text" id="sim-message" placeholder="Type merchant reply (e.g., 'Haan, interested hun!')"
+          class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-64"
+          onkeypress="if(event.key==='Enter') simulateReply()" />
+        <button onclick="simulateReply()"
+          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+          Send Reply →
+        </button>
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
+        <span class="font-medium">Quick replies:</span>
+        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+          onclick="document.getElementById('sim-message').value='Haan, interested hun! Batao aur.'">Interested 😊</button>
+        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+          onclick="document.getElementById('sim-message').value='Demo dikhao, kab available ho?'">Want Demo 📅</button>
+        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+          onclick="document.getElementById('sim-message').value='Pricing kya hai? Contract kya rahega?'">Ask Pricing 💰</button>
+        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+          onclick="document.getElementById('sim-message').value='Nahi chahiye, busy hun'">Not Interested ❌</button>
+        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
+          onclick="document.getElementById('sim-message').value='Soundbox ke baare mein batao, kitna charge hai?'">Ask Soundbox 🔊</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Conversation Modal -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="bg-paytm-dark text-white px-6 py-4 rounded-t-2xl flex items-center justify-between flex-shrink-0">
+        <div>
+          <h2 id="modal-title" class="font-bold text-lg"></h2>
+          <p id="modal-subtitle" class="text-blue-200 text-xs mt-0.5"></p>
+        </div>
+        <button onclick="closeModal()" class="text-white hover:text-blue-200 text-2xl leading-none">&times;</button>
+      </div>
+
+      <!-- Lead Info Bar -->
+      <div id="modal-info" class="bg-paytm-light px-6 py-3 border-b flex-shrink-0 flex flex-wrap gap-4 text-xs text-paytm-dark">
+      </div>
+
+      <!-- Chat Messages -->
+      <div id="modal-chat" class="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-gray-50">
+        <p class="text-center text-gray-400 text-sm">Loading conversation...</p>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-3 bg-white rounded-b-2xl border-t flex-shrink-0 text-xs text-gray-400 flex justify-between items-center">
+        <span id="modal-footer-status"></span>
+        <button onclick="closeModal()" class="text-paytm-dark hover:text-paytm-blue font-semibold">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Logic -->
+  <script>
+    const API = '';
+    let leadsCache = [];
+    let autoRefreshInterval = null;
+
+    // ── Badge Helpers ─────────────────────────────────────────────────
+
+    function statusBadge(status) {
+      const map = {
+        'new': 'bg-gray-200 text-gray-700',
+        'contacted': 'bg-blue-100 text-blue-800',
+        'in_conversation': 'bg-yellow-100 text-yellow-800',
+        'follow_up_scheduled': 'bg-orange-100 text-orange-800',
+        'follow_up_sent': 'bg-orange-200 text-orange-800',
+        'demo_scheduled': 'bg-purple-100 text-purple-800',
+        'escalated': 'bg-red-100 text-red-800',
+        'converted': 'bg-green-100 text-green-800',
+        'closed_lost': 'bg-gray-300 text-gray-600',
+      };
+      const labels = {
+        'new': '🆕 New', 'contacted': '📤 Contacted', 'in_conversation': '💬 Chatting',
+        'follow_up_scheduled': '⏰ Follow-up Due', 'follow_up_sent': '🔁 Followed Up',
+        'demo_scheduled': '📅 Demo Set', 'escalated': '🚨 Escalated',
+        'converted': '✅ Converted', 'closed_lost': '❌ Closed Lost',
+      };
+      const cls = map[status] || 'bg-gray-100 text-gray-600';
+      const label = labels[status] || status;
+      return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    function qualBadge(q) {
+      if (!q) return '<span class="badge bg-gray-100 text-gray-400">—</span>';
+      const map = {
+        'hot': 'bg-red-100 text-red-700 border border-red-200',
+        'warm': 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+        'cold': 'bg-blue-50 text-blue-500 border border-blue-200',
+      };
+      const icons = { hot: '🔥', warm: '🌡️', cold: '❄️' };
+      return `<span class="badge ${map[q] || ''}">${icons[q] || ''} ${q.charAt(0).toUpperCase() + q.slice(1)}</span>`;
+    }
+
+    function timeAgo(isoString) {
+      if (!isoString) return '—';
+      const diff = Math.floor((Date.now() - new Date(isoString)) / 1000);
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return `${Math.floor(diff / 86400)}d ago`;
+    }
+
+    // ── Stats ─────────────────────────────────────────────────────────
+
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API}/api/stats`);
+        const stats = await res.json();
+        const container = document.getElementById('stats-container');
+
+        const cards = [
+          { label: 'Total Leads', value: stats.total_leads, icon: '👥', color: 'border-paytm-dark', textColor: 'text-paytm-dark', bg: 'bg-white' },
+          { label: 'Hot 🔥', value: stats.hot, icon: '🔥', color: 'border-red-400', textColor: 'text-red-600', bg: 'bg-red-50' },
+          { label: 'Warm 🌡️', value: stats.warm, icon: '🌡️', color: 'border-yellow-400', textColor: 'text-yellow-600', bg: 'bg-yellow-50' },
+          { label: 'Cold ❄️', value: stats.cold, icon: '❄️', color: 'border-blue-300', textColor: 'text-blue-500', bg: 'bg-blue-50' },
+          { label: 'Converted ✅', value: `${stats.converted} (${stats.conversion_rate}%)`, icon: '✅', color: 'border-green-400', textColor: 'text-green-600', bg: 'bg-green-50' },
+          { label: 'Escalated 🚨', value: stats.escalated, icon: '🚨', color: 'border-orange-400', textColor: 'text-orange-600', bg: 'bg-orange-50' },
+          { label: 'Contacted', value: stats.contacted, icon: '📤', color: 'border-purple-400', textColor: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Closed Lost', value: stats.closed_lost, icon: '❌', color: 'border-gray-400', textColor: 'text-gray-500', bg: 'bg-gray-50' },
+          { label: 'Yet to Contact', value: stats.new, icon: '🆕', color: 'border-paytm-blue', textColor: 'text-paytm-dark', bg: 'bg-paytm-light' },
+          { label: 'Conversion Rate', value: `${stats.conversion_rate}%`, icon: '📈', color: 'border-indigo-400', textColor: 'text-indigo-600', bg: 'bg-indigo-50' },
+        ];
+
+        container.innerHTML = cards.map(c => `
+          <div class="stat-card ${c.bg} rounded-xl shadow p-4 border-l-4 ${c.color}">
+            <p class="text-xs text-gray-500 font-medium mb-1">${c.label}</p>
+            <p class="text-2xl font-bold ${c.textColor}">${c.value}</p>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Stats load error:', e);
+      }
+    }
+
+    // ── Leads Table ───────────────────────────────────────────────────
+
+    async function loadLeads() {
+      try {
+        const res = await fetch(`${API}/api/leads`);
+        const data = await res.json();
+        leadsCache = data.leads;
+
+        const tbody = document.getElementById('leads-tbody');
+        const select = document.getElementById('sim-lead-select');
+
+        if (!leadsCache || leadsCache.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-400">No leads found</td></tr>';
+          return;
+        }
+
+        // Update simulate lead select
+        select.innerHTML = '<option value="">Select a lead...</option>' +
+          leadsCache.map(l => `<option value="${l.id}">${l.name} — ${l.business}</option>`).join('');
+
+        tbody.innerHTML = leadsCache.map(lead => `
+          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+            <td class="px-4 py-3">
+              <div class="font-semibold text-gray-800">${lead.name}</div>
+              <div class="text-xs text-gray-400">${lead.phone}</div>
+            </td>
+            <td class="px-4 py-3">
+              <div class="text-gray-700">${lead.business}</div>
+              <div class="text-xs text-gray-400">${lead.business_type}</div>
+            </td>
+            <td class="px-4 py-3 text-gray-600 hidden md:table-cell">${lead.city}</td>
+            <td class="px-4 py-3">${statusBadge(lead.status)}</td>
+            <td class="px-4 py-3">${qualBadge(lead.qualification)}</td>
+            <td class="px-4 py-3 text-gray-500 text-xs hidden lg:table-cell">${timeAgo(lead.last_contacted)}</td>
+            <td class="px-4 py-3 text-center text-xs hidden lg:table-cell">
+              <span class="bg-paytm-light text-paytm-dark px-2 py-1 rounded-full font-semibold">${lead.conversation_turns}</span>
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2 flex-wrap">
+                ${lead.status === 'new' ? `
+                  <button onclick="startOutreach('${lead.id}')"
+                    class="bg-paytm-dark hover:bg-blue-900 text-white px-2 py-1 rounded text-xs font-semibold transition">
+                    🚀 Outreach
+                  </button>
+                ` : ''}
+                <button onclick="viewConversation('${lead.id}')"
+                  class="bg-paytm-blue hover:bg-blue-400 text-white px-2 py-1 rounded text-xs font-semibold transition">
+                  💬 Chat
+                </button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Leads load error:', e);
+        document.getElementById('leads-tbody').innerHTML =
+          '<tr><td colspan="8" class="text-center py-8 text-red-400">Error loading leads. Is the server running?</td></tr>';
+      }
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────
+
+    async function startOutreach(leadId) {
+      showToast('⏳', 'Starting Outreach', 'Sending WhatsApp + Email...');
+      try {
+        const res = await fetch(`${API}/api/leads/${leadId}/start`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✅', 'Outreach Started!', `WhatsApp & Email sent to ${data.lead_name}`);
+          loadData();
+        } else {
+          showToast('⚠️', 'Warning', data.error || 'Could not start outreach');
+        }
+      } catch (e) {
+        showToast('❌', 'Error', e.message);
+      }
+    }
+
+    async function startAllOutreach() {
+      showToast('⏳', 'Starting Bulk Outreach', 'Contacting all new leads...');
+      try {
+        const res = await fetch(`${API}/api/leads/start-all`, { method: 'POST' });
+        const data = await res.json();
+        showToast('✅', 'Bulk Outreach Done!', data.message);
+        loadData();
+      } catch (e) {
+        showToast('❌', 'Error', e.message);
+      }
+    }
+
+    async function runFollowUps() {
+      showToast('⏳', 'Running Follow-ups', 'Checking all leads...');
+      try {
+        const res = await fetch(`${API}/api/follow-ups/run`, { method: 'POST' });
+        const data = await res.json();
+        showToast('✅', 'Follow-ups Complete!', `Sent ${data.follow_ups_sent} follow-ups`);
+        loadData();
+      } catch (e) {
+        showToast('❌', 'Error', e.message);
+      }
+    }
+
+    async function simulateReply() {
+      const leadId = document.getElementById('sim-lead-select').value;
+      const message = document.getElementById('sim-message').value.trim();
+
+      if (!leadId || !message) {
+        showToast('⚠️', 'Missing Info', 'Please select a lead and type a message');
+        return;
+      }
+
+      showToast('⏳', 'Processing Reply', 'AI is analyzing and responding...');
+      try {
+        const res = await fetch(`${API}/api/leads/${leadId}/simulate-reply`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message }),
+        });
+        const data = await res.json();
+        document.getElementById('sim-message').value = '';
+        showToast('🤖', 'AI Responded!',
+          `Action: ${data.action_taken || 'processed'} | Lead: ${data.qualification || '?'}`);
+        loadData();
+        // Auto-open conversation
+        if (data.lead_id) setTimeout(() => viewConversation(data.lead_id), 500);
+      } catch (e) {
+        showToast('❌', 'Error', e.message);
+      }
+    }
+
+    async function resetDemo() {
+      if (!confirm('Reset ALL leads to new status? This clears all conversation history.')) return;
+      try {
+        const res = await fetch(`${API}/api/demo/reset`);
+        const data = await res.json();
+        showToast('🔄', 'Demo Reset!', data.message);
+        loadData();
+      } catch (e) {
+        showToast('❌', 'Error', e.message);
+      }
+    }
+
+    // ── Conversation Modal ────────────────────────────────────────────
+
+    async function viewConversation(leadId) {
+      try {
+        const res = await fetch(`${API}/api/leads/${leadId}`);
+        const lead = await res.json();
+
+        document.getElementById('modal-title').textContent = `${lead.name} — ${lead.business}`;
+        document.getElementById('modal-subtitle').textContent =
+          `${lead.city} | ${lead.business_type} | ${lead.phone}`;
+
+        // Info bar
+        document.getElementById('modal-info').innerHTML = `
+          <span>📊 Status: ${lead.status || 'new'}</span>
+          <span>🎯 Score: ${lead.qualification || '—'}</span>
+          <span>💰 Revenue: ${lead.monthly_revenue_estimate}</span>
+          <span>📱 Payment: ${lead.current_payment_method}</span>
+          <span>🔁 Follow-ups: ${lead.follow_up_count}</span>
+        `;
+
+        // Footer status
+        document.getElementById('modal-footer-status').textContent =
+          lead.assigned_human_rep ? `Assigned to: ${lead.assigned_human_rep}` : '';
+
+        // Chat
+        const chatEl = document.getElementById('modal-chat');
+        const history = lead.conversation_history || [];
+
+        if (history.length === 0) {
+          chatEl.innerHTML = `
+            <div class="text-center py-8">
+              <div class="text-4xl mb-3">💬</div>
+              <p class="text-gray-400 text-sm">No messages yet.</p>
+              <p class="text-gray-300 text-xs mt-1">Start outreach to begin the conversation.</p>
+            </div>
+          `;
+        } else {
+          chatEl.innerHTML = history.map(msg => {
+            const isAgent = msg.role === 'agent';
+            const time = msg.timestamp
+              ? new Date(msg.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+              : '';
+            const msgText = msg.message.replace(/\n/g, '<br>');
+            return `
+              <div class="flex ${isAgent ? 'justify-start' : 'justify-end'}">
+                <div class="max-w-[80%]">
+                  <div class="text-xs text-gray-400 mb-1 ${isAgent ? 'text-left' : 'text-right'}">
+                    ${isAgent ? '🤖 Paytm AI' : '👤 ' + lead.name.split(' ')[0]} · ${time}
+                  </div>
+                  <div class="${isAgent ? 'chat-bubble-agent' : 'chat-bubble-merchant'} px-4 py-2.5 text-sm leading-relaxed">
+                    ${msgText}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          // Pain points
+          if (lead.pain_points && lead.pain_points.length > 0) {
+            chatEl.innerHTML += `
+              <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-400 font-semibold mb-2">🎯 Lead Pain Points:</p>
+                <div class="flex flex-wrap gap-2">
+                  ${lead.pain_points.map(p => `<span class="bg-red-50 text-red-600 text-xs px-2 py-1 rounded-full border border-red-100">${p}</span>`).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          // Notes
+          if (lead.notes) {
+            chatEl.innerHTML += `
+              <div class="mt-3">
+                <p class="text-xs text-gray-400 font-semibold mb-1">📝 Notes:</p>
+                <p class="text-xs text-gray-500 bg-yellow-50 rounded p-2">${lead.notes.replace(/\n/g, '<br>')}</p>
+              </div>
+            `;
+          }
+        }
+
+        // Scroll to bottom
+        setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
+
+        document.getElementById('modal-overlay').classList.add('active');
+      } catch (e) {
+        showToast('❌', 'Error', 'Could not load conversation');
+        console.error(e);
+      }
+    }
+
+    function closeModal(event) {
+      if (!event || event.target.id === 'modal-overlay' || !event.target.closest) {
+        document.getElementById('modal-overlay').classList.remove('active');
+      }
+    }
+
+    // ── Toast ─────────────────────────────────────────────────────────
+
+    let toastTimeout = null;
+    function showToast(icon, title, msg) {
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-msg').textContent = msg;
+      const el = document.getElementById('toast');
+      el.classList.remove('hidden');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => el.classList.add('hidden'), 4000);
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────
+
+    async function loadData() {
+      await Promise.all([loadStats(), loadLeads()]);
+    }
+
+    // Initial load
+    loadData();
+
+    // Auto-refresh every 10 seconds
+    autoRefreshInterval = setInterval(loadData, 10000);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
