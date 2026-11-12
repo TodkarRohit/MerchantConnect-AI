@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Paytm AI Sales Teammate — Manager Dashboard</title>
+  <title>MerchantConnect AI — Autonomous AI Sales Teammate</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -14,6 +14,8 @@
               dark: '#002970',
               blue: '#00BAF2',
               light: '#e8f4fd',
+              navy: '#001845',
+              accent: '#00b4d8'
             }
           }
         }
@@ -21,147 +23,865 @@
     }
   </script>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
     .badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 50; }
     .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
-    .chat-bubble-agent { background: #002970; color: white; border-radius: 18px 18px 18px 4px; }
-    .chat-bubble-merchant { background: #f0f0f0; color: #333; border-radius: 18px 18px 4px 18px; }
+    .chat-bubble-agent { background: #002970; color: #ffffff; border-radius: 18px 18px 18px 4px; }
+    .chat-bubble-merchant { background: #f1f5f9; color: #0f172a; border-radius: 18px 18px 4px 18px; }
+    .chat-bubble-sim-agent { background: #dcf8c6; color: #111827; border-radius: 12px 12px 2px 12px; }
+    .chat-bubble-sim-user { background: #ffffff; color: #111827; border-radius: 12px 12px 12px 2px; }
     .pulse-dot { animation: pulse 2s infinite; }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .stat-card { transition: transform 0.2s; }
-    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card { transition: transform 0.2s, box-shadow 0.2s; }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08); }
+    /* High contrast input styling overrides to prevent dark mode illegibility */
+    input, select, textarea {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #94a3b8 !important;
+    }
+    .phone-container {
+      background-color: #e5ddd5;
+      background-image: radial-gradient(#d1c7b7 10%, transparent 11%);
+      background-size: 16px 16px;
+    }
   </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-paytm-dark text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-paytm-blue rounded-full flex items-center justify-center text-xl font-bold">P</div>
+  <!-- Global Header & Navigation -->
+  <header class="bg-paytm-dark text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between flex-wrap gap-3">
+      <!-- Brand & Hackathon Subtitle -->
+      <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('intro')">
+        <div class="w-10 h-10 bg-paytm-blue rounded-xl flex items-center justify-center text-xl font-black text-white shadow-inner">
+          M
+        </div>
         <div>
-          <h1 class="text-xl font-bold"><span class="text-paytm-blue">Paytm</span> AI Sales Teammate</h1>
-          <p class="text-xs text-blue-200">Manager Dashboard — Track 3: Autonomous AI Teammates</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight">MerchantConnect <span class="text-paytm-blue">AI</span></h1>
+            <span class="bg-blue-800 text-blue-200 text-[10px] font-semibold px-2 py-0.5 rounded-full border border-blue-600 hidden sm:inline-block">Track 3</span>
+          </div>
+          <p class="text-[11px] text-blue-200 font-medium">Paytm Build for India AI Hackathon — Autonomous AI Teammates</p>
         </div>
       </div>
-      <div class="flex items-center gap-3 flex-wrap">
-        <div class="flex items-center gap-2 text-sm">
-          <div id="status-dot" class="pulse-dot w-2 h-2 bg-green-400 rounded-full"></div>
-          <span id="status-label" class="text-green-300">AI Agent Active</span>
+
+      <!-- Header Status & Global Controls -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-paytm-navy/80 px-3 py-1.5 rounded-full border border-blue-900/60 text-xs">
+          <div class="pulse-dot w-2 h-2 bg-emerald-400 rounded-full"></div>
+          <span id="global-status-text" class="text-emerald-300 font-medium">Autonomous Teammate Active</span>
         </div>
-        <span id="mode-badge" class="hidden bg-blue-900 border border-paytm-blue text-blue-100 px-2.5 py-1 rounded-full text-xs font-medium">
-          Static Demo Mode
-        </span>
-        <button onclick="resetDemo()" class="bg-red-700 hover:bg-red-600 px-3 py-1 rounded text-xs transition">
-          🔄 Reset Demo
-        </button>
-        <button onclick="loadData()" class="bg-paytm-blue hover:bg-blue-400 px-3 py-1 rounded text-xs transition">
-          ↺ Refresh
+        <button onclick="resetDemo(true)" title="Reset entire demo state" class="bg-rose-700/90 hover:bg-rose-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1">
+          <span>🔄</span> <span class="hidden sm:inline">Reset Demo</span>
         </button>
       </div>
     </div>
+
+    <!-- 5 Navigation Tabs -->
+    <nav class="bg-paytm-navy border-t border-blue-900/50">
+      <div class="max-w-7xl mx-auto px-4 flex overflow-x-auto no-scrollbar">
+        <button id="tab-btn-intro" onclick="switchTab('intro')" class="nav-tab px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-paytm-blue text-paytm-blue transition whitespace-nowrap flex items-center gap-1.5">
+          <span>🏠</span> 1. Intro
+        </button>
+        <button id="tab-btn-train" onclick="switchTab('train')" class="nav-tab px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+          <span>🎯</span> 2. Train Agent
+        </button>
+        <button id="tab-btn-persona" onclick="switchTab('persona')" class="nav-tab px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+          <span>⚙️</span> 3. Persona & Rules
+        </button>
+        <button id="tab-btn-simulator" onclick="switchTab('simulator')" class="nav-tab px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+          <span>📱</span> 4. WhatsApp Simulator
+        </button>
+        <button id="tab-btn-dashboard" onclick="switchTab('dashboard')" class="nav-tab px-4 py-2.5 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-300 hover:text-white transition whitespace-nowrap flex items-center gap-1.5">
+          <span>📊</span> 5. Manager Dashboard
+        </button>
+      </div>
+    </nav>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 py-6">
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="stats-container">
-      <div class="col-span-2 md:col-span-5 text-center text-gray-400 py-4">Loading stats...</div>
-    </div>
-
-    <!-- Action Bar -->
-    <div class="bg-white rounded-xl shadow p-4 mb-6 flex flex-wrap gap-3 items-center justify-between">
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed top-20 right-4 z-50 hidden max-w-sm transition-all duration-300">
+    <div class="bg-white border-l-4 border-paytm-blue rounded-xl shadow-2xl p-4 flex items-start gap-3 border border-slate-200">
+      <span id="toast-icon" class="text-2xl flex-shrink-0">✅</span>
       <div>
-        <h2 class="font-bold text-paytm-dark text-lg">Lead Management</h2>
-        <p class="text-sm text-gray-500">Monitor and manage all merchant leads in real-time</p>
-      </div>
-      <div class="flex gap-3 flex-wrap">
-        <button onclick="startAllOutreach()"
-          class="bg-paytm-dark hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
-          🚀 Start All Outreach
-        </button>
-        <button onclick="runFollowUps()"
-          class="bg-paytm-blue hover:bg-blue-400 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2">
-          🔁 Run Follow-Ups
-        </button>
+        <p id="toast-title" class="font-bold text-sm text-slate-800"></p>
+        <p id="toast-msg" class="text-xs text-slate-600 mt-0.5 leading-relaxed"></p>
       </div>
     </div>
+  </div>
 
-    <!-- Toast notification -->
-    <div id="toast" class="fixed top-4 right-4 z-50 hidden max-w-sm">
-      <div class="bg-white border-l-4 border-paytm-blue rounded-lg shadow-lg p-4 flex items-start gap-3">
-        <span id="toast-icon" class="text-xl">✅</span>
-        <div>
-          <p id="toast-title" class="font-semibold text-sm text-gray-800"></p>
-          <p id="toast-msg" class="text-xs text-gray-500 mt-1"></p>
+  <!-- MAIN TAB CONTAINERS -->
+  <main class="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: INTRO (DEFAULT LANDING VIEW) -->
+    <!-- ========================================================================= -->
+    <section id="tab-intro" class="space-y-10">
+      
+      <!-- Hero Section -->
+      <div class="relative overflow-hidden bg-gradient-to-br from-paytm-dark via-blue-950 to-paytm-navy rounded-3xl text-white p-8 sm:p-12 shadow-xl border border-blue-900/60">
+        <div class="max-w-3xl space-y-5 relative z-10">
+          <div class="inline-flex items-center gap-2 bg-paytm-blue/20 text-paytm-blue border border-paytm-blue/40 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase">
+            ⚡ Track 3: Autonomous AI Teammates
+          </div>
+          <h1 class="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+            Stop waiting for merchants to call. Meet your <span class="text-paytm-blue">Autonomous AI Sales Teammate</span>.
+          </h1>
+          <p class="text-base sm:text-lg text-slate-300 leading-relaxed">
+            Unlike passive FAQ chatbots that sit idle on websites, <span class="font-bold text-white">MerchantConnect AI</span> proactively contacts merchants on <span class="text-emerald-400 font-semibold">WhatsApp & Email</span> in natural <span class="text-amber-300 font-semibold">Hinglish</span>, qualifies buying intent (<span class="text-rose-400 font-bold">Hot</span>, <span class="text-amber-400 font-bold">Warm</span>, <span class="text-blue-300 font-bold">Cold</span>), handles real objections, and automatically escalates ready-to-buy deals to your human sales reps.
+          </p>
+          <div class="flex flex-wrap gap-4 pt-3">
+            <button onclick="switchTab('train')" class="bg-paytm-blue hover:bg-sky-400 text-slate-900 font-bold px-6 py-3.5 rounded-xl shadow-lg hover:shadow-sky-500/25 transition-all flex items-center gap-2 text-sm sm:text-base">
+              <span>Step 2: Train Your AI Agent</span>
+              <span>→</span>
+            </button>
+            <button onclick="switchTab('dashboard')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-6 py-3.5 rounded-xl border border-white/20 transition-all text-sm sm:text-base flex items-center gap-2">
+              <span>📊 Open Manager Dashboard</span>
+            </button>
+          </div>
+        </div>
+        <!-- Decorative Glow -->
+        <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-paytm-blue/15 rounded-full blur-3xl pointer-events-none"></div>
+      </div>
+
+      <!-- 4 Impact Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 stat-card">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 text-paytm-blue text-2xl flex items-center justify-center mb-4 font-bold">⚡</div>
+          <div class="text-3xl font-black text-slate-900 tracking-tight">&lt; 5 sec</div>
+          <div class="text-sm font-bold text-slate-700 mt-1">Autonomous Response Time</div>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Instantly engages leads on WhatsApp while they are browsing or right after signup.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 stat-card">
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 text-2xl flex items-center justify-center mb-4 font-bold">📉</div>
+          <div class="text-3xl font-black text-slate-900 tracking-tight">60% Lower</div>
+          <div class="text-sm font-bold text-slate-700 mt-1">Customer Acquisition Cost (CAC)</div>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Automates cold calls & initial discovery touches, letting human reps focus on high-intent closing.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 stat-card">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 text-2xl flex items-center justify-center mb-4 font-bold">📈</div>
+          <div class="text-3xl font-black text-slate-900 tracking-tight">3.2x</div>
+          <div class="text-sm font-bold text-slate-700 mt-1">Lead-to-Demo Conversion</div>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Contextual Hinglish objection handling and instant voice alerts resolve merchant doubts fast.</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 stat-card">
+          <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 text-2xl flex items-center justify-center mb-4 font-bold">💬</div>
+          <div class="text-3xl font-black text-slate-900 tracking-tight">0 Apps</div>
+          <div class="text-sm font-bold text-slate-700 mt-1">Zero Download Friction</div>
+          <p class="text-xs text-slate-500 mt-1 leading-relaxed">Operates natively on WhatsApp, where 500M+ Indian merchants already conduct daily business.</p>
         </div>
       </div>
-    </div>
 
-    <!-- Leads Table -->
-    <div class="bg-white rounded-xl shadow overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead>
-            <tr class="bg-paytm-dark text-white">
-              <th class="text-left px-4 py-3 font-semibold">Merchant</th>
-              <th class="text-left px-4 py-3 font-semibold">Business</th>
-              <th class="text-left px-4 py-3 font-semibold hidden md:table-cell">City</th>
-              <th class="text-left px-4 py-3 font-semibold">Status</th>
-              <th class="text-left px-4 py-3 font-semibold">Lead Score</th>
-              <th class="text-left px-4 py-3 font-semibold hidden lg:table-cell">Last Contact</th>
-              <th class="text-left px-4 py-3 font-semibold hidden lg:table-cell">Msgs</th>
-              <th class="text-left px-4 py-3 font-semibold">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="leads-tbody">
-            <tr>
-              <td colspan="8" class="text-center py-8 text-gray-400">Loading leads...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- Problem vs. Solution Section -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- The Problem -->
+        <div class="bg-rose-50/60 rounded-3xl p-6 sm:p-8 border border-rose-200 shadow-sm space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-rose-100 text-rose-700 font-bold flex items-center justify-center text-xl">❌</span>
+            <div>
+              <h3 class="text-lg font-bold text-rose-900">The Problem: Traditional Merchant Sales</h3>
+              <p class="text-xs text-rose-700">Why typical outreach pipelines bleed money & miss targets</p>
+            </div>
+          </div>
+          <ul class="space-y-3 text-sm text-rose-950">
+            <li class="flex items-start gap-2.5">
+              <span class="text-rose-500 font-bold mt-0.5">•</span>
+              <span><strong>Slow human response times:</strong> Leads wait 4-24 hours for a sales rep call; by then 70% have signed up with competitors.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-rose-500 font-bold mt-0.5">•</span>
+              <span><strong>Language & slang disconnect:</strong> Rigid English scripts fail with Kirana and retail merchants who speak conversational Hinglish.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-rose-500 font-bold mt-0.5">•</span>
+              <span><strong>High sales rep fatigue:</strong> Reps waste 80% of their day cold-calling dead numbers instead of closing hot deals.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-rose-500 font-bold mt-0.5">•</span>
+              <span><strong>Passive chatbots:</strong> Web chat widgets wait for visitors to ask FAQs; they never initiate proactive sales pipelines.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- The Solution -->
+        <div class="bg-emerald-50/60 rounded-3xl p-6 sm:p-8 border border-emerald-200 shadow-sm space-y-4">
+          <div class="flex items-center gap-3">
+            <span class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-xl">✅</span>
+            <div>
+              <h3 class="text-lg font-bold text-emerald-900">The Solution: MerchantConnect AI Teammate</h3>
+              <p class="text-xs text-emerald-700">Autonomous, multi-turn, culturally adapted sales intelligence</p>
+            </div>
+          </div>
+          <ul class="space-y-3 text-sm text-emerald-950">
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-500 font-bold mt-0.5">•</span>
+              <span><strong>Proactive WhatsApp Outreach:</strong> Initiates personalized conversations the second a lead enters your database.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-500 font-bold mt-0.5">•</span>
+              <span><strong>Native Hinglish & Tone Adaptation:</strong> Understands Indian merchant colloquialisms, price sensitivity, and business challenges.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-500 font-bold mt-0.5">•</span>
+              <span><strong>Autonomous Qualification (BANT):</strong> Automatically scores leads into Hot, Warm, or Cold based on revenue, budget, and urgency.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <span class="text-emerald-500 font-bold mt-0.5">•</span>
+              <span><strong>Human-in-the-Loop Escalation:</strong> Seamlessly transfers high-intent ready-to-buy merchants with full context to human closers.</span>
+            </li>
+          </ul>
+        </div>
       </div>
-    </div>
 
-    <!-- Simulate Reply Panel -->
-    <div class="bg-white rounded-xl shadow p-4 mt-6">
-      <h3 class="font-bold text-paytm-dark mb-3">🧪 Demo: Simulate Merchant Reply</h3>
-      <div class="flex gap-3 flex-wrap">
-        <select id="sim-lead-select" class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-48">
-          <option value="">Select a lead...</option>
-        </select>
-        <input type="text" id="sim-message" placeholder="Type merchant reply (e.g., 'Haan, interested hun!')"
-          class="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-64"
-          onkeypress="if(event.key==='Enter') simulateReply()" />
-        <button onclick="simulateReply()"
-          class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
-          Send Reply →
+      <!-- 4-Step Walkthrough Strip -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
+        <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+          <span>🚀</span> How MerchantConnect AI Works in 4 Steps
+        </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+          <div class="space-y-2 border-l-2 border-paytm-blue pl-4">
+            <span class="text-xs font-bold text-paytm-blue tracking-wider uppercase">Step 01</span>
+            <h4 class="font-bold text-slate-800 text-base">Onboard & Train</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Provide your business USPs, pricing tiers, and common merchant objections in seconds.</p>
+          </div>
+          <div class="space-y-2 border-l-2 border-paytm-blue pl-4">
+            <span class="text-xs font-bold text-paytm-blue tracking-wider uppercase">Step 02</span>
+            <h4 class="font-bold text-slate-800 text-base">Proactive Outreach</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">AI automatically crafts tailored WhatsApp + Email openers based on merchant revenue and pain points.</p>
+          </div>
+          <div class="space-y-2 border-l-2 border-paytm-blue pl-4">
+            <span class="text-xs font-bold text-paytm-blue tracking-wider uppercase">Step 03</span>
+            <h4 class="font-bold text-slate-800 text-base">Qualify & Counter</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Handles pricing doubts, Soundbox vs QR comparisons, and schedules live demos autonomously.</p>
+          </div>
+          <div class="space-y-2 border-l-2 border-paytm-blue pl-4">
+            <span class="text-xs font-bold text-paytm-blue tracking-wider uppercase">Step 04</span>
+            <h4 class="font-bold text-slate-800 text-base">Escalate & Close</h4>
+            <p class="text-xs text-slate-500 leading-relaxed">Alerts sales leadership when high-ticket deals require immediate closing call or device dispatch.</p>
+          </div>
+        </div>
+        <div class="mt-8 pt-6 border-t border-slate-100 flex flex-wrap justify-between items-center gap-4">
+          <span class="text-xs text-slate-500">Ready to train your autonomous teammate for your product?</span>
+          <button onclick="switchTab('train')" class="bg-paytm-dark hover:bg-blue-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5">
+            <span>Get Started with Step 2: Train Agent</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: TRAIN AGENT (BUSINESS ONBOARDING) -->
+    <!-- ========================================================================= -->
+    <section id="tab-train" class="hidden space-y-8">
+      
+      <!-- Header banner -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-blue-50 text-paytm-dark px-3 py-1 rounded-full text-xs font-bold mb-2">
+            Step 2 of 4 · Business Knowledge Base
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">Train Your AI Sales Teammate</h2>
+          <p class="text-sm text-slate-500 mt-1 max-w-2xl">
+            Feed your company's offerings, value proposition, and customer objection rules. Use our 1-click industry presets or tailor every field for your specific venture.
+          </p>
+        </div>
+        <button onclick="switchTab('persona')" class="bg-paytm-blue hover:bg-sky-400 text-slate-900 font-bold px-5 py-2.5 rounded-xl text-sm transition flex items-center gap-2 shadow">
+          <span>Next: Persona & Rules</span>
+          <span>→</span>
         </button>
       </div>
-      <div class="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-        <span class="font-medium">Quick replies:</span>
-        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
-          onclick="document.getElementById('sim-message').value='Haan, interested hun! Batao aur.'">Interested 😊</button>
-        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
-          onclick="document.getElementById('sim-message').value='Demo dikhao, kab available ho?'">Want Demo 📅</button>
-        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
-          onclick="document.getElementById('sim-message').value='Pricing kya hai? Contract kya rahega?'">Ask Pricing 💰</button>
-        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
-          onclick="document.getElementById('sim-message').value='Nahi chahiye, busy hun'">Not Interested ❌</button>
-        <button class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition"
-          onclick="document.getElementById('sim-message').value='Soundbox ke baare mein batao, kitna charge hai?'">Ask Soundbox 🔊</button>
+
+      <!-- 4 One-Click Industry Presets -->
+      <div class="space-y-3">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-500">⚡ 1-Click Industry Presets (Click to autofill):</label>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <button onclick="applyPreset('paytm')" class="preset-btn p-3.5 rounded-2xl border-2 border-paytm-blue bg-blue-50/50 hover:bg-blue-100/60 text-left transition flex flex-col justify-between">
+            <div>
+              <div class="text-xl mb-1">🔊</div>
+              <div class="font-bold text-paytm-dark text-sm">Paytm Soundbox & QR</div>
+              <p class="text-[11px] text-slate-500 mt-0.5">Fintech merchant payments & voice alerts</p>
+            </div>
+            <span class="text-[10px] font-bold text-paytm-blue mt-2 inline-block">Active Preset ✓</span>
+          </button>
+
+          <button onclick="applyPreset('realestate')" class="preset-btn p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-left transition flex flex-col justify-between">
+            <div>
+              <div class="text-xl mb-1">🏢</div>
+              <div class="font-bold text-slate-800 text-sm">Commercial Real Estate</div>
+              <p class="text-[11px] text-slate-500 mt-0.5">Grade-A pre-leased office & retail suites</p>
+            </div>
+            <span class="text-[10px] font-medium text-slate-400 mt-2 inline-block">Apply Preset</span>
+          </button>
+
+          <button onclick="applyPreset('solar')" class="preset-btn p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-left transition flex flex-col justify-between">
+            <div>
+              <div class="text-xl mb-1">☀️</div>
+              <div class="font-bold text-slate-800 text-sm">Rooftop Solar Solutions</div>
+              <p class="text-[11px] text-slate-500 mt-0.5">Turnkey industrial & domestic solar EPC</p>
+            </div>
+            <span class="text-[10px] font-medium text-slate-400 mt-2 inline-block">Apply Preset</span>
+          </button>
+
+          <button onclick="applyPreset('wholesale')" class="preset-btn p-3.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 text-left transition flex flex-col justify-between">
+            <div>
+              <div class="text-xl mb-1">📦</div>
+              <div class="font-bold text-slate-800 text-sm">B2B Wholesale FMCG</div>
+              <p class="text-[11px] text-slate-500 mt-0.5">Direct mandi-to-store grocery supplies</p>
+            </div>
+            <span class="text-[10px] font-medium text-slate-400 mt-2 inline-block">Apply Preset</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      <!-- Main Form & Live JSON Preview Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Editable Knowledge Form (7 cols) -->
+        <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+          <h3 class="font-bold text-slate-900 text-lg border-b border-slate-100 pb-3 flex items-center gap-2">
+            <span>📝</span> Business Knowledge Profile
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Company / Brand Name</label>
+              <input type="text" id="train-brand" oninput="updateLiveJSON()" class="w-full text-sm rounded-xl px-3.5 py-2.5 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none" value="Paytm for Business" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Industry Vertical</label>
+              <input type="text" id="train-vertical" oninput="updateLiveJSON()" class="w-full text-sm rounded-xl px-3.5 py-2.5 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none" value="Fintech & Merchant Digital Payments" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Product / Service Offering</label>
+            <input type="text" id="train-product" oninput="updateLiveJSON()" class="w-full text-sm rounded-xl px-3.5 py-2.5 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none" value="Paytm Soundbox 4G & All-in-One UPI QR Code" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Ideal Customer Profile (ICP)</label>
+            <textarea id="train-icp" rows="2" oninput="updateLiveJSON()" class="w-full text-sm rounded-xl p-3 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none">Retail Kirana stores, medical pharmacies, restaurants and food stalls doing ₹2L-₹15L monthly revenue facing payment queue bottlenecks.</textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Pricing & Key USPs (Differentiators)</label>
+            <textarea id="train-pricing" rows="2" oninput="updateLiveJSON()" class="w-full text-sm rounded-xl p-3 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none">0% MDR on all UPI transactions, ₹125/month Soundbox rental, instant voice alert confirmation in 11 regional languages, 7-day battery backup.</textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Common Objections & AI Rebuttal Guidelines</label>
+            <textarea id="train-objections" rows="3" oninput="updateLiveJSON()" class="w-full text-sm rounded-xl p-3 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none">"Soundbox is too expensive" -> Saves ₹2000+/mo in avoided fake payment fraud; "Already have phone UPI" -> Avoids merchant having to check phone while busy with customer; "Battery issue" -> Comes with fast Type-C charging and 7-day battery.</textarea>
+          </div>
+
+          <div class="pt-2 flex justify-between items-center">
+            <span class="text-xs text-slate-400">Settings auto-saved locally</span>
+            <button onclick="saveTrainingConfig(true)" class="bg-paytm-dark hover:bg-blue-900 text-white font-bold px-5 py-2.5 rounded-xl text-xs transition">
+              💾 Save Training Profile
+            </button>
+          </div>
+        </div>
+
+        <!-- Live JSON Context Preview Card (5 cols) -->
+        <div class="lg:col-span-5 bg-slate-900 text-slate-100 rounded-3xl p-6 sm:p-7 shadow-lg flex flex-col justify-between border border-slate-800">
+          <div>
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                <h4 class="font-bold text-sm text-slate-200">Live Agent Memory Context</h4>
+              </div>
+              <button onclick="copyAgentJSON()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded text-xs transition flex items-center gap-1">
+                <span>📋</span> Copy JSON
+              </button>
+            </div>
+            <p class="text-xs text-slate-400 mb-3">
+              This dynamic JSON representation is injected into the autonomous decision engine to guide every message:
+            </p>
+            <pre id="json-preview" class="bg-slate-950 text-emerald-400 text-[11px] p-4 rounded-xl overflow-x-auto max-h-96 font-mono leading-relaxed border border-slate-800"></pre>
+          </div>
+          
+          <div class="mt-6 pt-4 border-t border-slate-800 flex justify-end">
+            <button onclick="switchTab('persona')" class="bg-paytm-blue hover:bg-sky-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1">
+              <span>Next: Persona & Rules</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: PERSONA & RULES -->
+    <!-- ========================================================================= -->
+    <section id="tab-persona" class="hidden space-y-8">
+      
+      <!-- Header banner -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-blue-50 text-paytm-dark px-3 py-1 rounded-full text-xs font-bold mb-2">
+            Step 3 of 4 · Behavioral Guardrails
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">Agent Persona & Escalation Rules</h2>
+          <p class="text-sm text-slate-500 mt-1 max-w-2xl">
+            Configure how your autonomous agent talks, which language policy it follows, its conversion objective, and the exact triggers that escalate to human sales managers.
+          </p>
+        </div>
+        <button onclick="savePersonaAndLaunch()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl text-sm transition flex items-center gap-2 shadow-lg hover:shadow-emerald-600/25">
+          <span>Train & Launch Simulator</span>
+          <span>→</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Tone & Language Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+          <h3 class="font-bold text-slate-900 text-lg border-b border-slate-100 pb-3 flex items-center gap-2">
+            <span>🎭</span> Conversational Tone & Language Policy
+          </h3>
+
+          <!-- Tone Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Agent Tone & Personality</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <label class="cursor-pointer border-2 border-paytm-blue bg-blue-50/40 p-3 rounded-2xl flex flex-col items-start gap-1 tone-option">
+                <input type="radio" name="agent-tone" value="warm" checked class="text-paytm-blue" onchange="savePersonaConfig()" />
+                <span class="font-bold text-xs text-slate-800">Warm & Consultative</span>
+                <span class="text-[10px] text-slate-500">Empathetic merchant partner, helpful, trust-first</span>
+              </label>
+
+              <label class="cursor-pointer border border-slate-200 p-3 rounded-2xl flex flex-col items-start gap-1 hover:bg-slate-50 tone-option">
+                <input type="radio" name="agent-tone" value="professional" class="text-paytm-blue" onchange="savePersonaConfig()" />
+                <span class="font-bold text-xs text-slate-800">Professional & ROI-Focused</span>
+                <span class="text-[10px] text-slate-500">Corporate, numbers-driven, concise, business metric focus</span>
+              </label>
+
+              <label class="cursor-pointer border border-slate-200 p-3 rounded-2xl flex flex-col items-start gap-1 hover:bg-slate-50 tone-option">
+                <input type="radio" name="agent-tone" value="enthusiastic" class="text-paytm-blue" onchange="savePersonaConfig()" />
+                <span class="font-bold text-xs text-slate-800">High Energy & Persuasive</span>
+                <span class="text-[10px] text-slate-500">Urgency-driven, promotional discount & offer emphasis</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Language Policy -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Language Mode</label>
+            <select id="agent-language" onchange="savePersonaConfig()" class="w-full text-sm rounded-xl px-3.5 py-2.5 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none">
+              <option value="auto">🇮🇳 Auto-Detect (Mirror customer: Hinglish, English, Hindi)</option>
+              <option value="hinglish">✨ Hinglish (Natural Indian business conversational mix)</option>
+              <option value="english">🇬🇧 Formal English Only</option>
+              <option value="hindi">🇮🇳 Pure Hindi (Devanagari)</option>
+            </select>
+            <p class="text-[11px] text-slate-400 mt-1.5">
+              Auto-detect inspects every merchant query and replies in the exact script/language preferred by the shop owner.
+            </p>
+          </div>
+
+          <!-- Closing Objective -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Primary Conversion Goal</label>
+            <select id="agent-goal" onchange="savePersonaConfig()" class="w-full text-sm rounded-xl px-3.5 py-2.5 border border-slate-300 focus:border-paytm-blue focus:ring-2 focus:ring-blue-100 outline-none">
+              <option value="demo">📅 Book a 5-Minute In-Store / Video Product Demo</option>
+              <option value="dispatch">📦 Collect Store Address for Instant Soundbox Dispatch</option>
+              <option value="rep_call">📞 Schedule Callback from Regional Human Sales Closer</option>
+              <option value="signup">🔗 Send Instant Zero-Paperwork KYC Merchant Signup Link</option>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Human Escalation Guardrails Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+          <h3 class="font-bold text-slate-900 text-lg border-b border-slate-100 pb-3 flex items-center gap-2">
+            <span>🚨</span> Human Escalation & Guardrail Rules
+          </h3>
+          <p class="text-xs text-slate-500">
+            The AI teammate operates autonomously until a designated boundary is reached. When triggered, the lead is tagged <span class="text-rose-600 font-bold">Escalated 🚨</span> and routed to a human rep with full conversation history.
+          </p>
+
+          <div class="space-y-3.5">
+            <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="checkbox" id="esc-pricing" checked onchange="savePersonaConfig()" class="mt-1 h-4 w-4 rounded text-paytm-blue" />
+              <div>
+                <span class="text-sm font-bold text-slate-800">High Volume / Custom Pricing Negotiations</span>
+                <p class="text-xs text-slate-500">Escalate whenever merchant asks for enterprise discounts or monthly volume &gt; ₹10 Lakhs.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="checkbox" id="esc-complaint" checked onchange="savePersonaConfig()" class="mt-1 h-4 w-4 rounded text-paytm-blue" />
+              <div>
+                <span class="text-sm font-bold text-slate-800">Unhappy Sentiment & Frustrated Merchants</span>
+                <p class="text-xs text-slate-500">Detect words like "fraud", "worst service", "complaint", and transfer immediately to avoid PR damage.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="checkbox" id="esc-competitor" checked onchange="savePersonaConfig()" class="mt-1 h-4 w-4 rounded text-paytm-blue" />
+              <div>
+                <span class="text-sm font-bold text-slate-800">Direct Competitor Switch Negotiations</span>
+                <p class="text-xs text-slate-500">When merchant mentions PhonePe, BharatPe, or Google Pay, escalate to Senior Sales for aggressive retention terms.</p>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+              <input type="checkbox" id="esc-technical" checked onchange="savePersonaConfig()" class="mt-1 h-4 w-4 rounded text-paytm-blue" />
+              <div>
+                <span class="text-sm font-bold text-slate-800">POS Hardware & ERP Integration Requests</span>
+                <p class="text-xs text-slate-500">Route complex billing software / API integration queries to Solutions Engineer.</p>
+              </div>
+            </label>
+          </div>
+
+          <div class="pt-2">
+            <button onclick="savePersonaAndLaunch()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-2xl text-sm transition shadow-lg hover:shadow-emerald-600/25 flex items-center justify-center gap-2">
+              <span>🚀 Launch WhatsApp Simulator with Trained Profile</span>
+              <span>→</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: WHATSAPP SIMULATOR -->
+    <!-- ========================================================================= -->
+    <section id="tab-simulator" class="hidden space-y-6">
+      
+      <!-- Top banner -->
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-4">
+        <div>
+          <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold mb-1">
+            Step 4 of 4 · Live WhatsApp Sandbox
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">Interactive WhatsApp Teammate Simulator</h2>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Test how the AI teammate speaks, switches languages, qualifies leads, and triggers guardrails based on your trained business context.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="resetSimulatorChat()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition">
+            🔄 Clear Chat
+          </button>
+          <button onclick="switchTab('dashboard')" class="bg-paytm-blue hover:bg-sky-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
+            <span>Next: Manager Dashboard</span>
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Simulator Layout (Phone Mockup + Decision Engine Telemetry) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left / Phone Mockup (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col items-center">
+          <div class="w-full max-w-md bg-slate-900 rounded-[40px] p-3 shadow-2xl border-4 border-slate-800">
+            
+            <!-- Phone Notch / Speaker -->
+            <div class="w-full flex justify-center pb-2">
+              <div class="w-28 h-4 bg-slate-800 rounded-full flex items-center justify-center">
+                <div class="w-3 h-3 bg-slate-900 rounded-full"></div>
+              </div>
+            </div>
+
+            <!-- WhatsApp App Container -->
+            <div class="rounded-[30px] overflow-hidden flex flex-col h-[600px] border border-slate-700 bg-white">
+              
+              <!-- WhatsApp Header -->
+              <div class="bg-[#075e54] text-white px-4 py-3 flex items-center justify-between flex-shrink-0 shadow">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-9 h-9 rounded-full bg-paytm-blue flex items-center justify-center text-white font-bold text-sm shadow">
+                    AI
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <span id="sim-agent-name" class="font-bold text-sm leading-none">Paytm AI Sales</span>
+                      <span class="text-emerald-300 text-xs" title="Official Business Account">✓</span>
+                    </div>
+                    <span class="text-[11px] text-emerald-200">Online · Business Teammate</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 text-white/90 text-sm">
+                  <span>📹</span>
+                  <span>📞</span>
+                  <span>⋮</span>
+                </div>
+              </div>
+
+              <!-- Chat Message Scroll View -->
+              <div id="sim-chat-area" class="phone-container flex-1 overflow-y-auto p-4 space-y-3">
+                <!-- Date chip -->
+                <div class="text-center my-1">
+                  <span class="bg-white/80 backdrop-blur-sm text-slate-600 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm">
+                    Today
+                  </span>
+                </div>
+                <!-- Messages will be injected by JavaScript -->
+              </div>
+
+              <!-- Quick Test Customer Buttons -->
+              <div class="bg-slate-100 p-2 border-t border-slate-200">
+                <div class="text-[10px] font-bold text-slate-500 mb-1 px-1">💡 Quick-Test Customer Messages:</div>
+                <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                  <button onclick="sendSimQuick('Haan interested hun! Pricing aur soundbox rental kya hai?')" class="bg-white hover:bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg border border-slate-200 shadow-xs transition">
+                    🇮🇳 Hinglish Inquiry
+                  </button>
+                  <button onclick="sendSimQuick('Can you please share the pricing breakdown and schedule a demo?')" class="bg-white hover:bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg border border-slate-200 shadow-xs transition">
+                    🇬🇧 English Demo Query
+                  </button>
+                  <button onclick="sendSimQuick('Please speak only in English. I do not follow Hindi.')" class="bg-white hover:bg-slate-200 text-slate-800 text-[11px] px-2 py-1 rounded-lg border border-slate-200 shadow-xs transition">
+                    🌐 English Language Switch
+                  </button>
+                  <button onclick="sendSimQuick('Hum ready hain, store par kal subah soundbox lagwa do!')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-[11px] px-2 py-1 rounded-lg border border-emerald-200 shadow-xs transition">
+                    🔥 Hot Buying Intent
+                  </button>
+                  <button onclick="sendSimQuick('Humare paas already PhonePe hai, aap mein kya alag hai?')" class="bg-amber-50 hover:bg-amber-100 text-amber-800 text-[11px] px-2 py-1 rounded-lg border border-amber-200 shadow-xs transition">
+                    ⚔️ Competitor Objection
+                  </button>
+                  <button onclick="sendSimQuick('Volume 15 Lakh per month hai, custom discount milega kya?')" class="bg-rose-50 hover:bg-rose-100 text-rose-800 text-[11px] px-2 py-1 rounded-lg border border-rose-200 shadow-xs transition">
+                    🚨 High-Volume Escalation
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bottom Input Bar -->
+              <div class="bg-[#f0f2f5] px-3 py-2 flex items-center gap-2 border-t border-slate-200">
+                <input type="text" id="sim-user-input" placeholder="Type customer reply as merchant..." onkeypress="if(event.key==='Enter') sendSimMessage()" class="flex-1 bg-white text-slate-900 text-xs rounded-full px-4 py-2.5 border border-slate-300 outline-none focus:border-[#075e54]" />
+                <button onclick="sendSimMessage()" class="w-9 h-9 rounded-full bg-[#075e54] hover:bg-[#128c7e] text-white flex items-center justify-center text-sm shadow transition">
+                  ➤
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Right / Decision Engine Telemetry Panel (5 cols) -->
+        <div class="lg:col-span-5 space-y-4">
+          
+          <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-5">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <span>🧠</span> Decision Engine Telemetry
+              </h3>
+              <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Real-Time</span>
+            </div>
+
+            <!-- Detected Telemetry Metrics -->
+            <div class="space-y-3">
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Detected Customer Language</span>
+                <div class="mt-1 flex items-center gap-2">
+                  <span id="telemetry-lang-badge" class="badge bg-blue-100 text-blue-800 font-bold">Hinglish (Colloquial)</span>
+                  <span id="telemetry-lang-desc" class="text-xs text-slate-500">Auto-mirror active</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Customer Sentiment & Intent</span>
+                <div class="mt-1 flex items-center gap-2">
+                  <span id="telemetry-sentiment-badge" class="badge bg-emerald-100 text-emerald-800 font-bold">Positive Inquiry 🔥</span>
+                  <span id="telemetry-intent-desc" class="text-xs text-slate-500">Evaluating product features</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Lead State Qualification</span>
+                <div class="mt-1 flex items-center gap-2">
+                  <span id="telemetry-lead-state" class="badge bg-amber-100 text-amber-800 font-bold">Warm Lead 🌡️</span>
+                  <span id="telemetry-score-desc" class="text-xs text-slate-500">BANT: Need identified</span>
+                </div>
+              </div>
+
+              <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Next Autonomous Action</span>
+                <div class="mt-1 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <p id="telemetry-next-action" class="text-xs font-semibold text-paytm-dark">
+                    Answer pricing with ₹125/mo rental & propose in-store 5-min demo.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Training & Persona Readout -->
+            <div class="pt-4 border-t border-slate-100 space-y-2 text-xs text-slate-600">
+              <div class="flex justify-between">
+                <span class="font-medium text-slate-400">Trained Brand:</span>
+                <span id="telemetry-brand" class="font-bold text-slate-800">Paytm for Business</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium text-slate-400">Configured Tone:</span>
+                <span id="telemetry-tone" class="font-bold text-slate-800 capitalize">Warm & Consultative</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="font-medium text-slate-400">Primary Goal:</span>
+                <span id="telemetry-goal" class="font-bold text-slate-800">Book In-Store Demo</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Quick Tip Card -->
+          <div class="bg-blue-50/70 rounded-2xl p-4 border border-blue-200 text-xs text-blue-950 space-y-1.5">
+            <p class="font-bold flex items-center gap-1.5">
+              <span>💡</span> Try testing guardrails:
+            </p>
+            <p class="text-blue-900 leading-relaxed">
+              Type <em class="font-semibold text-paytm-dark">"Humara volume 20 Lakh hai, discount do"</em> or mention <em class="font-semibold text-paytm-dark">"PhonePe"</em> to see how the engine instantly triggers human escalation and notifies the manager!
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: MANAGER DASHBOARD (EXISTING 10-LEAD DASHBOARD) -->
+    <!-- ========================================================================= -->
+    <section id="tab-dashboard" class="hidden space-y-6">
+
+      <!-- Dynamic Brand Banner -->
+      <div id="dash-brand-banner" class="bg-gradient-to-r from-paytm-dark to-paytm-navy text-white rounded-3xl p-6 shadow-md flex flex-wrap justify-between items-center gap-4 border border-blue-900/60">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="bg-paytm-blue text-slate-950 text-[10px] font-black px-2 py-0.5 rounded uppercase">Autonomous Teammate</span>
+            <span id="dash-banner-brand" class="text-sm font-bold text-blue-200">Paytm for Business</span>
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight">Merchant Pipeline Management</h2>
+          <p class="text-xs text-blue-100">Live multi-channel outreach tracker with automated lead qualification & human escalation</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="switchTab('train')" class="bg-white/10 hover:bg-white/20 text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition border border-white/20">
+            ⚙️ Edit Agent Training
+          </button>
+          <button onclick="switchTab('simulator')" class="bg-paytm-blue hover:bg-sky-400 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold transition">
+            📱 Open Simulator
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Cards (10 KPI Cards) -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5" id="stats-container">
+        <div class="col-span-2 md:col-span-5 text-center text-gray-400 py-4">Loading stats...</div>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="bg-white rounded-2xl shadow-sm p-4 border border-slate-200 flex flex-wrap gap-3 items-center justify-between">
+        <div>
+          <h3 class="font-bold text-paytm-dark text-base">Active Merchant Pipeline</h3>
+          <p class="text-xs text-gray-500">Track 10 real-world Indian merchant profiles from Kirana to Medical & Restaurants</p>
+        </div>
+        <div class="flex gap-2.5 flex-wrap">
+          <button onclick="startAllOutreach()"
+            class="bg-paytm-dark hover:bg-blue-900 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+            🚀 Start All Outreach
+          </button>
+          <button onclick="runFollowUps()"
+            class="bg-paytm-blue hover:bg-sky-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
+            🔁 Run Follow-Ups
+          </button>
+        </div>
+      </div>
+
+      <!-- Leads Table -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-paytm-dark text-white text-xs">
+                <th class="text-left px-4 py-3 font-semibold">Merchant</th>
+                <th class="text-left px-4 py-3 font-semibold">Business</th>
+                <th class="text-left px-4 py-3 font-semibold hidden md:table-cell">City</th>
+                <th class="text-left px-4 py-3 font-semibold">Status</th>
+                <th class="text-left px-4 py-3 font-semibold">Lead Score</th>
+                <th class="text-left px-4 py-3 font-semibold hidden lg:table-cell">Last Contact</th>
+                <th class="text-left px-4 py-3 font-semibold hidden lg:table-cell">Msgs</th>
+                <th class="text-left px-4 py-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leads-tbody" class="divide-y divide-gray-100">
+              <tr>
+                <td colspan="8" class="text-center py-8 text-gray-400">Loading leads...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Simulate Reply Panel -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+        <h3 class="font-bold text-paytm-dark text-sm mb-3 flex items-center gap-2">
+          <span>🧪</span> Demo: Simulate Merchant Reply to Active Lead
+        </h3>
+        <div class="flex gap-3 flex-wrap">
+          <select id="sim-lead-select" class="border border-slate-300 rounded-xl px-3 py-2 text-xs flex-1 min-w-48 outline-none focus:border-paytm-blue">
+            <option value="">Select a lead...</option>
+          </select>
+          <input type="text" id="sim-message" placeholder="Type merchant reply (e.g., 'Haan, interested hun!')"
+            class="border border-slate-300 rounded-xl px-3 py-2 text-xs flex-1 min-w-64 outline-none focus:border-paytm-blue"
+            onkeypress="if(event.key==='Enter') simulateReply()" />
+          <button onclick="simulateReply()"
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+            Send Reply →
+          </button>
+        </div>
+        <div class="mt-2.5 flex flex-wrap gap-2 text-xs text-gray-500 items-center">
+          <span class="font-semibold text-slate-600 text-[11px]">Quick merchant replies:</span>
+          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded-lg text-xs transition"
+            onclick="document.getElementById('sim-message').value='Haan, interested hun! Batao aur.'">Interested 😊</button>
+          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded-lg text-xs transition"
+            onclick="document.getElementById('sim-message').value='Demo dikhao, kab available ho?'">Want Demo 📅</button>
+          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded-lg text-xs transition"
+            onclick="document.getElementById('sim-message').value='Pricing kya hai? Contract kya rahega?'">Ask Pricing 💰</button>
+          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded-lg text-xs transition"
+            onclick="document.getElementById('sim-message').value='Nahi chahiye, busy hun'">Not Interested ❌</button>
+          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded-lg text-xs transition"
+            onclick="document.getElementById('sim-message').value='Soundbox ke baare mein batao, kitna charge hai?'">Ask Product 🔊</button>
+        </div>
+      </div>
+
+    </section>
 
   </main>
 
-  <!-- Conversation Modal -->
+  <!-- Global Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-700">MerchantConnect AI</span>
+        <span>— Paytm Build for India AI Hackathon</span>
+      </div>
+      <div class="flex gap-4">
+        <a href="https://github.com/TodkarRohit/MerchantConnect-AI" target="_blank" class="hover:text-paytm-dark transition">GitHub Repository</a>
+        <button onclick="switchTab('intro')" class="hover:text-paytm-dark transition">Intro</button>
+        <button onclick="switchTab('train')" class="hover:text-paytm-dark transition">Train</button>
+        <button onclick="switchTab('dashboard')" class="hover:text-paytm-dark transition">Dashboard</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Conversation Modal (Shared with Dashboard) -->
   <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 flex flex-col max-h-[85vh]" onclick="event.stopPropagation()">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full mx-4 flex flex-col max-h-[85vh] overflow-hidden border border-slate-200" onclick="event.stopPropagation()">
       <!-- Modal Header -->
-      <div class="bg-paytm-dark text-white px-6 py-4 rounded-t-2xl flex items-center justify-between flex-shrink-0">
+      <div class="bg-paytm-dark text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
         <div>
           <h2 id="modal-title" class="font-bold text-lg"></h2>
           <p id="modal-subtitle" class="text-blue-200 text-xs mt-0.5"></p>
@@ -170,41 +890,450 @@
       </div>
 
       <!-- Lead Info Bar -->
-      <div id="modal-info" class="bg-paytm-light px-6 py-3 border-b flex-shrink-0 flex flex-wrap gap-4 text-xs text-paytm-dark">
+      <div id="modal-info" class="bg-paytm-light px-6 py-3 border-b border-blue-100 flex-shrink-0 flex flex-wrap gap-4 text-xs text-paytm-dark font-medium">
       </div>
 
       <!-- Chat Messages -->
-      <div id="modal-chat" class="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-gray-50">
+      <div id="modal-chat" class="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-slate-50">
         <p class="text-center text-gray-400 text-sm">Loading conversation...</p>
       </div>
 
       <!-- Modal Footer -->
-      <div class="px-6 py-3 bg-white rounded-b-2xl border-t flex-shrink-0 text-xs text-gray-400 flex justify-between items-center">
-        <span id="modal-footer-status"></span>
-        <button onclick="closeModal()" class="text-paytm-dark hover:text-paytm-blue font-semibold">Close</button>
+      <div class="px-6 py-3 bg-white border-t border-slate-200 flex-shrink-0 text-xs text-gray-500 flex justify-between items-center">
+        <span id="modal-footer-status" class="font-semibold text-rose-600"></span>
+        <button onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-1.5 rounded-lg transition">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- JS Logic -->
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
   <script>
     const API = '';
     const STORAGE_KEY = 'merchantconnect_demo_leads_v1';
+    const TRAINING_STORAGE_KEY = 'merchantconnect_training_config_v1';
+    const PERSONA_STORAGE_KEY = 'merchantconnect_persona_config_v1';
+    
     let staticMode = false;
     let leadsCache = [];
     let autoRefreshInterval = null;
+    let currentTab = 'intro';
 
-    // ── Static Demo Mode Helpers ──────────────────────────────────────
+    // ── 4 Industry Presets ─────────────────────────────────────────────
+    const INDUSTRY_PRESETS = {
+      paytm: {
+        brand: 'Paytm for Business',
+        vertical: 'Fintech & Merchant Digital Payments',
+        product: 'Paytm Soundbox 4G & All-in-One UPI QR Code',
+        icp: 'Retail Kirana stores, medical pharmacies, restaurants and food stalls doing ₹2L-₹15L monthly revenue facing payment queue bottlenecks.',
+        pricing: '0% MDR on all UPI transactions, ₹125/month Soundbox rental, instant voice alert confirmation in 11 regional languages, 7-day battery backup.',
+        objections: '"Soundbox is too expensive" -> Saves ₹2000+/mo in avoided fake payment fraud; "Already have phone UPI" -> Avoids merchant having to check phone while busy with customer; "Battery issue" -> Comes with fast Type-C charging and 7-day battery.'
+      },
+      realestate: {
+        brand: 'Apex Commercial Realty',
+        vertical: 'Commercial Real Estate & Grade-A Offices',
+        product: 'Pre-Leased Commercial Retail & Office Suites',
+        icp: 'HNIs, business owners, and family offices looking for 7-9% steady rental yields with Grade-A multinational tenants.',
+        pricing: 'Investment tickets from ₹45 Lakhs, 7.8% verified gross rental yield, 9-year corporate leases with 15% escalation every 3 years.',
+        objections: '"Tenant vacancy risk" -> 5-year lock-in with Fortune 500 bank tenant; "Market fluctuation" -> Prime metro arterial highway location guarantees capital appreciation.'
+      },
+      solar: {
+        brand: 'SunVolt Green Energy',
+        vertical: 'Commercial & Rooftop Solar EPC',
+        product: 'Turnkey Rooftop Solar Installations & Net Metering',
+        icp: 'Factories, commercial complexes, schools, and villas with monthly electricity bills exceeding ₹15,000.',
+        pricing: 'Up to 80% power bill reduction, PM Surya Ghar central subsidy assistance, 25-year panel warranty, 0-downpayment green bank EMI.',
+        objections: '"High upfront setup cost" -> Recovers completely in 3.2 years through power savings; "Monsoon generation drop" -> Net-metering exports surplus summer units back to DISCOM grid.'
+      },
+      wholesale: {
+        brand: 'KiranaB2B Direct Supply',
+        vertical: 'B2B FMCG & Grocery Wholesale',
+        product: 'Direct Mandi-to-Store Bulk Grocery Supply & Doorstep Delivery',
+        icp: 'Independent Kirana stores, mini-supermarkets, and bakery owners across Tier-1/2 metro clusters.',
+        pricing: 'Extra 3.5% trade margin compared to local mandis, 24-hr doorstep delivery, 14-day collateral-free rolling credit line.',
+        objections: '"Credit approval hassle" -> Instant 10-minute GST & bank statement paperless limit; "Stock delivery delays" -> Guaranteed morning 8 AM dispatch or ₹500 penalty credit.'
+      }
+    };
 
+    // ── Tab Navigation ────────────────────────────────────────────────
+    function switchTab(tabId) {
+      currentTab = tabId;
+      const tabs = ['intro', 'train', 'persona', 'simulator', 'dashboard'];
+      
+      tabs.forEach(t => {
+        const sec = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabId) {
+          if (sec) sec.classList.remove('hidden');
+          if (btn) {
+            btn.classList.add('border-paytm-blue', 'text-paytm-blue');
+            btn.classList.remove('border-transparent', 'text-slate-300');
+          }
+        } else {
+          if (sec) sec.classList.add('hidden');
+          if (btn) {
+            btn.classList.remove('border-paytm-blue', 'text-paytm-blue');
+            btn.classList.add('border-transparent', 'text-slate-300');
+          }
+        }
+      });
+
+      // Update URL hash safely without reload
+      if (history.replaceState) {
+        history.replaceState(null, null, `#${tabId}`);
+      }
+
+      // Smooth scroll to top of main
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Special init actions per tab
+      if (tabId === 'train') {
+        updateLiveJSON();
+      } else if (tabId === 'simulator') {
+        initSimulatorFromConfig();
+      } else if (tabId === 'dashboard') {
+        updateDashboardBrandBanner();
+        loadData();
+      }
+    }
+
+    // ── Training State Management ─────────────────────────────────────
+    function getTrainingConfig() {
+      const saved = localStorage.getItem(TRAINING_STORAGE_KEY);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+      return INDUSTRY_PRESETS.paytm;
+    }
+
+    function saveTrainingConfig(notify = false) {
+      const config = {
+        brand: document.getElementById('train-brand').value.trim() || 'Paytm for Business',
+        vertical: document.getElementById('train-vertical').value.trim(),
+        product: document.getElementById('train-product').value.trim(),
+        icp: document.getElementById('train-icp').value.trim(),
+        pricing: document.getElementById('train-pricing').value.trim(),
+        objections: document.getElementById('train-objections').value.trim(),
+        updated_at: new Date().toISOString()
+      };
+      localStorage.setItem(TRAINING_STORAGE_KEY, JSON.stringify(config));
+      updateLiveJSON();
+      if (notify) {
+        showToast('💾', 'Agent Trained!', `Updated knowledge base for ${config.brand}`);
+      }
+      return config;
+    }
+
+    function applyPreset(presetKey) {
+      const p = INDUSTRY_PRESETS[presetKey];
+      if (!p) return;
+      document.getElementById('train-brand').value = p.brand;
+      document.getElementById('train-vertical').value = p.vertical;
+      document.getElementById('train-product').value = p.product;
+      document.getElementById('train-icp').value = p.icp;
+      document.getElementById('train-pricing').value = p.pricing;
+      document.getElementById('train-objections').value = p.objections;
+
+      // Update button active styling
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.remove('border-2', 'border-paytm-blue', 'bg-blue-50/50');
+        b.classList.add('border', 'border-slate-200', 'bg-white');
+      });
+      event.currentTarget.classList.remove('border-slate-200', 'bg-white');
+      event.currentTarget.classList.add('border-2', 'border-paytm-blue', 'bg-blue-50/50');
+
+      saveTrainingConfig(false);
+      showToast('✨', 'Preset Applied', `Loaded knowledge for ${p.brand}`);
+    }
+
+    function updateLiveJSON() {
+      const config = {
+        company_name: document.getElementById('train-brand').value.trim(),
+        industry_vertical: document.getElementById('train-vertical').value.trim(),
+        product_offering: document.getElementById('train-product').value.trim(),
+        ideal_customer_profile: document.getElementById('train-icp').value.trim(),
+        pricing_and_usps: document.getElementById('train-pricing').value.trim(),
+        objection_rebuttals: document.getElementById('train-objections').value.trim(),
+        version: '1.0.0-trained'
+      };
+      const pre = document.getElementById('json-preview');
+      if (pre) {
+        pre.textContent = JSON.stringify(config, null, 2);
+      }
+    }
+
+    function copyAgentJSON() {
+      const pre = document.getElementById('json-preview');
+      if (pre && navigator.clipboard) {
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+          showToast('📋', 'JSON Copied!', 'Agent knowledge JSON copied to clipboard');
+        });
+      }
+    }
+
+    // ── Persona & Rules Management ────────────────────────────────────
+    function getPersonaConfig() {
+      const saved = localStorage.getItem(PERSONA_STORAGE_KEY);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) {}
+      }
+      return {
+        tone: 'warm',
+        language: 'auto',
+        goal: 'demo',
+        escalations: { pricing: true, complaint: true, competitor: true, technical: true }
+      };
+    }
+
+    function savePersonaConfig() {
+      const toneInput = document.querySelector('input[name="agent-tone"]:checked');
+      const tone = toneInput ? toneInput.value : 'warm';
+      const language = document.getElementById('agent-language').value;
+      const goal = document.getElementById('agent-goal').value;
+      const escalations = {
+        pricing: document.getElementById('esc-pricing').checked,
+        complaint: document.getElementById('esc-complaint').checked,
+        competitor: document.getElementById('esc-competitor').checked,
+        technical: document.getElementById('esc-technical').checked
+      };
+
+      const persona = { tone, language, goal, escalations };
+      localStorage.setItem(PERSONA_STORAGE_KEY, JSON.stringify(persona));
+      return persona;
+    }
+
+    function savePersonaAndLaunch() {
+      saveTrainingConfig(false);
+      savePersonaConfig();
+      showToast('🚀', 'Teammate Deployed!', 'Launching live WhatsApp Simulator with trained rules');
+      switchTab('simulator');
+    }
+
+    // ── WhatsApp Simulator Logic ──────────────────────────────────────
+    let simHistory = [];
+
+    function initSimulatorFromConfig() {
+      const train = getTrainingConfig();
+      const persona = getPersonaConfig();
+
+      // Update telemetry display
+      document.getElementById('sim-agent-name').textContent = `${train.brand} AI`;
+      document.getElementById('telemetry-brand').textContent = train.brand;
+      document.getElementById('telemetry-tone').textContent = `${persona.tone} & consultative`;
+      
+      const goalLabels = {
+        demo: 'Book In-Store / Video Demo',
+        dispatch: 'Collect Address for Dispatch',
+        rep_call: 'Schedule Closer Call',
+        signup: 'Send Digital KYC Link'
+      };
+      document.getElementById('telemetry-goal').textContent = goalLabels[persona.goal] || 'Book Demo';
+
+      // If chat is empty, generate initial outreach
+      if (simHistory.length === 0) {
+        const greeting = generateProactiveGreeting(train, persona);
+        simHistory.push({
+          role: 'agent',
+          text: greeting,
+          time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        });
+        renderSimChat();
+        updateTelemetryForMessage(greeting, 'agent', train, persona);
+      }
+    }
+
+    function generateProactiveGreeting(train, persona) {
+      if (persona.language === 'english') {
+        return `Hello! 🙏 I am your autonomous sales teammate from ${train.brand}. We noticed you operate in ${train.vertical}. We offer ${train.product} with ${train.pricing.split(',')[0] || 'exclusive rates'}. Would you be interested in a 5-minute briefing?`;
+      }
+      // Hinglish / Auto
+      return `Namaste ji! 🙏 Main ${train.brand} se aapka AI sales teammate hun. Aapke store ke liye humare paas ${train.product} par special deal hai — ${train.pricing.split(',')[0] || '0% fees'}. Kya main 2 min mein quick details share karun?`;
+    }
+
+    function renderSimChat() {
+      const chatArea = document.getElementById('sim-chat-area');
+      if (!chatArea) return;
+
+      chatArea.innerHTML = `
+        <div class="text-center my-1">
+          <span class="bg-white/80 backdrop-blur-sm text-slate-600 text-[10px] font-semibold px-2.5 py-1 rounded-full shadow-sm">
+            Today
+          </span>
+        </div>
+      `;
+
+      simHistory.forEach(msg => {
+        const isAgent = msg.role === 'agent';
+        const bubbleCls = isAgent ? 'chat-bubble-sim-agent' : 'chat-bubble-sim-user';
+        const alignCls = isAgent ? 'justify-start' : 'justify-end';
+
+        const div = document.createElement('div');
+        div.className = `flex ${alignCls} mb-2`;
+        div.innerHTML = `
+          <div class="max-w-[85%] ${bubbleCls} px-3 py-2 text-xs shadow-sm">
+            <p class="leading-relaxed">${msg.text.replace(/\n/g, '<br>')}</p>
+            <div class="text-[9px] text-slate-400 mt-1 text-right flex items-center justify-end gap-1">
+              <span>${msg.time}</span>
+              ${!isAgent ? '<span class="text-sky-500">✓✓</span>' : ''}
+            </div>
+          </div>
+        `;
+        chatArea.appendChild(div);
+      });
+
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function sendSimQuick(text) {
+      document.getElementById('sim-user-input').value = text;
+      sendSimMessage();
+    }
+
+    function sendSimMessage() {
+      const input = document.getElementById('sim-user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const nowTime = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      simHistory.push({ role: 'user', text, time: nowTime });
+      input.value = '';
+      renderSimChat();
+
+      const train = getTrainingConfig();
+      const persona = getPersonaConfig();
+
+      // Show typing indicator momentarily
+      setTimeout(() => {
+        const response = evaluateSimulatedAgentReply(text, train, persona);
+        simHistory.push({
+          role: 'agent',
+          text: response.reply,
+          time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+        });
+        renderSimChat();
+        updateTelemetryForMessage(text, 'user', train, persona, response);
+      }, 600);
+    }
+
+    function evaluateSimulatedAgentReply(userMsg, train, persona) {
+      const msg = userMsg.toLowerCase();
+      let reply = '';
+      let lang = 'Hinglish (Colloquial)';
+      let sentiment = 'Inquiry / Warm 🌡️';
+      let state = 'Warm Lead 🌡️';
+      let nextAction = 'Share product value proposition';
+
+      const isEnglish = persona.language === 'english' || (msg.includes('speak only in english') || (msg.split(' ').length > 3 && !msg.includes('kya') && !msg.includes('hai') && !msg.includes('hun') && !msg.includes('nahi')));
+
+      if (isEnglish) {
+        lang = 'English (Formal)';
+      }
+
+      // Check Escalation triggers
+      if (persona.escalations.pricing && (msg.includes('15 lakh') || msg.includes('volume') || msg.includes('custom discount') || msg.includes('lakh per month'))) {
+        sentiment = 'High Volume Enterprise 🚨';
+        state = 'Escalated 🚨';
+        nextAction = 'Trigger VIP escalation to Senior Sales Closer';
+        reply = isEnglish
+          ? `That's exceptional volume! For ${train.brand} clients doing over ₹10 Lakhs monthly, our Senior Sales Director offers customized enterprise pricing. I have escalated this with priority — our director Vikram Mehta will call you in 15 minutes.`
+          : `Bahut badhiya volume hai ji! ${train.brand} mein ₹10 Lakh+ turnover wale merchants ke liye custom enterprise pricing milti hai. Maine aapki file humare Senior Sales Director Vikram Mehta ko assign kar di hai — woh 15 min mein direct call karenge.`;
+        return { reply, lang, sentiment, state, nextAction };
+      }
+
+      if (persona.escalations.competitor && (msg.includes('phonepe') || msg.includes('bharatpe') || msg.includes('gpay') || msg.includes('google pay'))) {
+        sentiment = 'Competitor Evaluation ⚔️';
+        state = 'Warm (Retention Opportunity)';
+        nextAction = 'Highlight unique USPs & 0% MDR';
+        reply = isEnglish
+          ? `Great question! While other providers charge hidden settlement fees or hardware penalties, ${train.brand} gives you ${train.pricing}. Plus, our zero-lag instant voice alert stops fraud before customers leave.`
+          : `Bilkul sahi sawal! PhonePe aur baaki providers mein soundbox aur settlement par extra charges lagte hain, jabki ${train.brand} deta hai ${train.pricing}. Aur instant voice alert se fake payment screenshot ka zero risk rehta hai!`;
+        return { reply, lang, sentiment, state, nextAction };
+      }
+
+      if (msg.includes('speak only in english') || msg.includes('english please')) {
+        sentiment = 'Language Preference 🌐';
+        state = 'Warm Lead 🌡️';
+        nextAction = 'Lock language policy to English';
+        reply = `Certainly! I will communicate strictly in English from here on. How can ${train.brand} assist your business today? Would you like our complete product brochure and pricing details?`;
+        return { reply, lang: 'English (User Locked)', sentiment, state, nextAction };
+      }
+
+      if (msg.includes('ready') || msg.includes('dispatch') || msg.includes('lagwa do') || msg.includes('khareedna') || msg.includes('buy')) {
+        sentiment = 'High Purchase Intent 🔥';
+        state = 'Hot Deal 🔥';
+        nextAction = 'Lock store address for delivery dispatch';
+        reply = isEnglish
+          ? `Fantastic! We are ready to dispatch ${train.product} to your doorstep. Please share your exact store shop name, pincode, and GST/Aadhaar number to process immediate activation!`
+          : `Shandar! 🎉 Hum turant ${train.brand} ka ${train.product} dispatch karwa dete hain. Kripya apna dukan ka address, pin code aur mobile number share kar dijiye taaki kal subah delivery ho sake!`;
+        return { reply, lang, sentiment, state, nextAction };
+      }
+
+      if (msg.includes('demo') || msg.includes('kab available')) {
+        sentiment = 'Demo Request 📅';
+        state = 'Hot Lead 🔥';
+        nextAction = 'Confirm date & time for live demo';
+        reply = isEnglish
+          ? `We would love to demonstrate ${train.product}! We have demo slots available tomorrow at 11:00 AM or 4:30 PM. Which time suits you best?`
+          : `Bilkul ji! Hum kal subah 11:00 AM ya shaam 4:30 PM par aapki shop par live demo dikha sakte hain. Kaunsa time aapke liye best rahega?`;
+        return { reply, lang, sentiment, state, nextAction };
+      }
+
+      if (msg.includes('nahi') || msg.includes('busy') || msg.includes('not interested')) {
+        sentiment = 'Cold / Reluctant ❄️';
+        state = 'Cold Lead ❄️';
+        nextAction = 'Polite graceful hold, schedule re-engagement in 14 days';
+        reply = isEnglish
+          ? `Understood! No worries at all. Whenever your business needs ${train.product}, feel free to ping us right here. Wishing you great sales!`
+          : `Samajh gaya ji! Koi baat nahi. Jab bhi aapko ${train.product} ki zaroorat lage, aap humein kabhi bhi WhatsApp kar sakte hain. Dhanyavaad!`;
+        return { reply, lang, sentiment, state, nextAction };
+      }
+
+      // Default contextual objection / inquiry handler
+      sentiment = 'Product Curiosity 🌡️';
+      state = 'Warm Lead 🌡️';
+      nextAction = 'Deliver objection rebuttal & propose demo';
+      reply = isEnglish
+        ? `Thank you for asking! For ${train.product}, our key advantage is: ${train.pricing}. Plus, ${train.objections.split(';')[0] || 'it saves both time and operational money'}. Would you like to review our 1-page summary?`
+        : `Zaroor batata hun ji! ${train.product} mein aapko milta hai: ${train.pricing}. Aur ${train.objections.split(';')[0] || 'is se payment ka sabhi jhanjhat khatam ho jata hai'}. Kya hum kal ek 5-minute ka quick demo arrange karein?`;
+
+      return { reply, lang, sentiment, state, nextAction };
+    }
+
+    function updateTelemetryForMessage(text, role, train, persona, evalResult) {
+      if (evalResult) {
+        document.getElementById('telemetry-lang-badge').textContent = evalResult.lang;
+        document.getElementById('telemetry-sentiment-badge').textContent = evalResult.sentiment;
+        document.getElementById('telemetry-lead-state').textContent = evalResult.state;
+        document.getElementById('telemetry-next-action').textContent = evalResult.nextAction;
+      }
+    }
+
+    function resetSimulatorChat() {
+      simHistory = [];
+      initSimulatorFromConfig();
+      showToast('🔄', 'Simulator Reset', 'Conversation cleared to initial state');
+    }
+
+    // ── Static Leads & Manager Dashboard Logic ────────────────────────
     async function ensureStaticLeads() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         return JSON.parse(saved);
       }
-      const res = await fetch('./data/leads.json');
-      const leads = await res.json();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
-      return leads;
+      try {
+        const res = await fetch('./data/leads.json');
+        const leads = await res.json();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+        return leads;
+      } catch (e) {
+        // Fallback demo leads if data/leads.json fails to fetch
+        const fallback = [
+          { id: "LEAD001", name: "Ramesh Sharma", business: "Sharma General Store", city: "Delhi", phone: "+919876543210", email: "ramesh@example.com", business_type: "Kirana Store", monthly_revenue_estimate: "2-5 Lakh", current_payment_method: "Cash only", pain_points: ["No digital payments", "Losing customers who want UPI"], status: "new", qualification: null, conversation_history: [], last_contacted: null, follow_up_count: 0 },
+          { id: "LEAD002", name: "Sunita Patel", business: "Patel Medical & General", city: "Ahmedabad", phone: "+919823456789", email: "sunita.patel@example.com", business_type: "Medical Store", monthly_revenue_estimate: "5-10 Lakh", current_payment_method: "Cash + some UPI", pain_points: ["No proper billing", "Can't track daily sales"], status: "new", qualification: null, conversation_history: [], last_contacted: null, follow_up_count: 0 },
+          { id: "LEAD003", name: "Mohammed Irfan", business: "Irfan's Biryani House", city: "Hyderabad", phone: "+919912345678", email: "irfan.biryani@example.com", business_type: "Restaurant", monthly_revenue_estimate: "8-15 Lakh", current_payment_method: "Cash + UPI", pain_points: ["Long billing queues"], status: "new", qualification: null, conversation_history: [], last_contacted: null, follow_up_count: 0 }
+        ];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
+        return fallback;
+      }
     }
 
     function saveStaticLeads(leads) {
@@ -231,58 +1360,13 @@
       return { total_leads: total, ...counts, conversion_rate };
     }
 
-    function simulateAgentResponse(lead, merchantMessage) {
-      const msg = merchantMessage.toLowerCase();
-      const firstName = lead.name.split(' ')[0];
-      let reply = '';
-      let action = 'replied';
-
-      if (msg.includes('not interested') || msg.includes('nahi') || msg.includes('busy')) {
-        lead.status = 'closed_lost';
-        lead.qualification = 'cold';
-        action = 'closed_lost';
-        reply = `Samajh gaya ${firstName} ji! Koi baat nahi, jab bhi aapko ${lead.business} ke liye Paytm Soundbox ya QR ki zaroorat ho, humein zaroor batayein. Dhanyavaad!`;
-      } else if (msg.includes('pricing') || msg.includes('contract') || msg.includes('charge') || msg.includes('rate')) {
-        lead.status = 'escalated';
-        lead.qualification = 'hot';
-        lead.assigned_human_rep = 'Vikram Mehta (Senior Sales)';
-        action = 'escalated_to_human';
-        reply = `Bahut badhiya sawal ${firstName} ji! ${lead.business} ke ${lead.monthly_revenue_estimate} volume ke hisaab se hum aapko custom MDR & Soundbox plan de sakte hain. Maine aapka case humare Senior Sales Rep Vikram Mehta ko assign kar diya hai — woh aapko 15 min mein call karenge.`;
-      } else if (msg.includes('demo') || msg.includes('kab')) {
-        lead.status = 'demo_scheduled';
-        lead.qualification = 'hot';
-        action = 'demo_scheduled';
-        reply = `Bilkul ${firstName} ji! Hum kal subah 11:00 AM ya shaam 4:00 PM par ${lead.business} mein live Paytm Soundbox & Billing demo dikha sakte hain. Kaunsa time aapke liye convenient rahega?`;
-      } else if (msg.includes('interested') || msg.includes('haan') || msg.includes('batao')) {
-        lead.status = 'in_conversation';
-        lead.qualification = 'warm';
-        action = 'qualified_warm';
-        reply = `Bahut khushi hui ${firstName} ji! Paytm for Business ke saath ${lead.business} mein aapko milta hai 0% MDR UPI QR, instant voice alert Soundbox, aur daily settlement tracking. Kya aap chahenge ki hum ek quick 5-min demo schedule karein?`;
-      } else {
-        lead.status = 'in_conversation';
-        lead.qualification = lead.qualification || 'warm';
-        action = 'replied';
-        reply = `Dhanyavaad ${firstName} ji! Paytm Business App aur Soundbox se aapke "${(lead.pain_points && lead.pain_points[0]) || 'payment'}" ki problem turant solve ho sakti hai. Kya main aapko iski details aur offer bhejoon?`;
-      }
-
-      const now = new Date().toISOString();
-      lead.conversation_history = lead.conversation_history || [];
-      lead.conversation_history.push({ role: 'merchant', message: merchantMessage, timestamp: now });
-      lead.conversation_history.push({ role: 'agent', message: reply, timestamp: new Date(Date.now() + 500).toISOString() });
-      lead.last_contacted = now;
-      return { action, qualification: lead.qualification };
-    }
-
-    function enableStaticMode() {
-      if (!staticMode) {
-        staticMode = true;
-        document.getElementById('mode-badge').classList.remove('hidden');
-        document.getElementById('status-label').textContent = 'Static Demo Active';
-      }
+    function updateDashboardBrandBanner() {
+      const train = getTrainingConfig();
+      const el = document.getElementById('dash-banner-brand');
+      if (el) el.textContent = `${train.brand} (${train.product})`;
     }
 
     // ── Badge Helpers ─────────────────────────────────────────────────
-
     function statusBadge(status) {
       const map = {
         'new': 'bg-gray-200 text-gray-700',
@@ -326,8 +1410,7 @@
       return `${Math.floor(diff / 86400)}d ago`;
     }
 
-    // ── Stats ─────────────────────────────────────────────────────────
-
+    // ── Stats Loader ──────────────────────────────────────────────────
     async function loadStats() {
       let stats;
       if (!staticMode) {
@@ -336,7 +1419,7 @@
           if (!res.ok) throw new Error('API unavailable');
           stats = await res.json();
         } catch (e) {
-          enableStaticMode();
+          staticMode = true;
         }
       }
 
@@ -346,6 +1429,8 @@
       }
 
       const container = document.getElementById('stats-container');
+      if (!container) return;
+
       const cards = [
         { label: 'Total Leads', value: stats.total_leads, icon: '👥', color: 'border-paytm-dark', textColor: 'text-paytm-dark', bg: 'bg-white' },
         { label: 'Hot 🔥', value: stats.hot, icon: '🔥', color: 'border-red-400', textColor: 'text-red-600', bg: 'bg-red-50' },
@@ -360,15 +1445,14 @@
       ];
 
       container.innerHTML = cards.map(c => `
-        <div class="stat-card ${c.bg} rounded-xl shadow p-4 border-l-4 ${c.color}">
-          <p class="text-xs text-gray-500 font-medium mb-1">${c.label}</p>
-          <p class="text-2xl font-bold ${c.textColor}">${c.value}</p>
+        <div class="stat-card ${c.bg} rounded-2xl shadow-sm p-4 border-l-4 ${c.color}">
+          <p class="text-[11px] text-gray-500 font-semibold mb-1">${c.label}</p>
+          <p class="text-2xl font-black ${c.textColor}">${c.value}</p>
         </div>
       `).join('');
     }
 
-    // ── Leads Table ───────────────────────────────────────────────────
-
+    // ── Leads Table Loader ────────────────────────────────────────────
     async function loadLeads() {
       try {
         if (!staticMode) {
@@ -378,7 +1462,7 @@
             const data = await res.json();
             leadsCache = data.leads;
           } catch (e) {
-            enableStaticMode();
+            staticMode = true;
           }
         }
 
@@ -393,41 +1477,45 @@
         const tbody = document.getElementById('leads-tbody');
         const select = document.getElementById('sim-lead-select');
 
+        if (!tbody) return;
+
         if (!leadsCache || leadsCache.length === 0) {
           tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-gray-400">No leads found</td></tr>';
           return;
         }
 
-        select.innerHTML = '<option value="">Select a lead...</option>' +
-          leadsCache.map(l => `<option value="${l.id}">${l.name} — ${l.business}</option>`).join('');
+        if (select) {
+          select.innerHTML = '<option value="">Select a lead...</option>' +
+            leadsCache.map(l => `<option value="${l.id}">${l.name} — ${l.business}</option>`).join('');
+        }
 
         tbody.innerHTML = leadsCache.map(lead => `
-          <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+          <tr class="hover:bg-slate-50 transition-colors">
             <td class="px-4 py-3">
-              <div class="font-semibold text-gray-800">${lead.name}</div>
-              <div class="text-xs text-gray-400">${lead.phone}</div>
+              <div class="font-bold text-slate-800">${lead.name}</div>
+              <div class="text-xs text-slate-400 font-mono">${lead.phone}</div>
             </td>
             <td class="px-4 py-3">
-              <div class="text-gray-700">${lead.business}</div>
-              <div class="text-xs text-gray-400">${lead.business_type}</div>
+              <div class="text-slate-800 font-medium">${lead.business}</div>
+              <div class="text-xs text-slate-400">${lead.business_type}</div>
             </td>
-            <td class="px-4 py-3 text-gray-600 hidden md:table-cell">${lead.city}</td>
+            <td class="px-4 py-3 text-slate-600 hidden md:table-cell text-xs">${lead.city}</td>
             <td class="px-4 py-3">${statusBadge(lead.status)}</td>
             <td class="px-4 py-3">${qualBadge(lead.qualification)}</td>
-            <td class="px-4 py-3 text-gray-500 text-xs hidden lg:table-cell">${timeAgo(lead.last_contacted)}</td>
+            <td class="px-4 py-3 text-slate-500 text-xs hidden lg:table-cell">${timeAgo(lead.last_contacted)}</td>
             <td class="px-4 py-3 text-center text-xs hidden lg:table-cell">
-              <span class="bg-paytm-light text-paytm-dark px-2 py-1 rounded-full font-semibold">${lead.conversation_turns}</span>
+              <span class="bg-paytm-light text-paytm-dark px-2.5 py-1 rounded-full font-bold text-xs">${lead.conversation_turns}</span>
             </td>
             <td class="px-4 py-3">
               <div class="flex gap-2 flex-wrap">
                 ${lead.status === 'new' ? `
                   <button onclick="startOutreach('${lead.id}')"
-                    class="bg-paytm-dark hover:bg-blue-900 text-white px-2 py-1 rounded text-xs font-semibold transition">
+                    class="bg-paytm-dark hover:bg-blue-900 text-white px-2.5 py-1 rounded-lg text-xs font-bold transition">
                     🚀 Outreach
                   </button>
                 ` : ''}
                 <button onclick="viewConversation('${lead.id}')"
-                  class="bg-paytm-blue hover:bg-blue-400 text-white px-2 py-1 rounded text-xs font-semibold transition">
+                  class="bg-paytm-blue hover:bg-sky-400 text-slate-950 px-2.5 py-1 rounded-lg text-xs font-bold transition">
                   💬 Chat
                 </button>
               </div>
@@ -436,16 +1524,15 @@
         `).join('');
       } catch (e) {
         console.error('Leads load error:', e);
-        document.getElementById('leads-tbody').innerHTML =
-          '<tr><td colspan="8" class="text-center py-8 text-red-400">Error loading leads.</td></tr>';
       }
     }
 
-    // ── Actions ───────────────────────────────────────────────────────
-
+    // ── Dynamic Outreach & Actions ────────────────────────────────────
     async function startOutreach(leadId) {
-      showToast('⏳', 'Starting Outreach', 'Sending WhatsApp + Email...');
+      showToast('⏳', 'Starting Outreach', 'Sending personalized WhatsApp + Email...');
       try {
+        const train = getTrainingConfig();
+
         if (staticMode) {
           const leads = await ensureStaticLeads();
           const lead = leads.find(l => l.id === leadId);
@@ -453,17 +1540,18 @@
           const now = new Date().toISOString();
           const firstName = lead.name.split(' ')[0];
           const pain = (lead.pain_points && lead.pain_points[0]) || 'payment settlement';
+
           lead.status = 'contacted';
           lead.qualification = 'warm';
           lead.last_contacted = now;
           lead.conversation_history = lead.conversation_history || [];
           lead.conversation_history.push({
             role: 'agent',
-            message: `Namaste ${firstName} ji! 🙏 Main Paytm AI Sales Teammate hun. Dekha ki ${lead.business} (${lead.city}) mein aapko "${pain}" mein help chahiye. Paytm QR + Soundbox se aap instant payment alerts aur 0% UPI fee pa sakte hain. Kya main 2 min mein details share karun?`,
+            message: `Namaste ${firstName} ji! 🙏 Main ${train.brand} ka AI Sales Teammate hun. Dekha ki ${lead.business} (${lead.city}) mein aapko "${pain}" solve karne mein help chahiye. Humare ${train.product} se aap ${train.pricing.split(',')[0] || '0% extra fees'} pa sakte hain. Kya main 2 min mein details bataun?`,
             timestamp: now
           });
           saveStaticLeads(leads);
-          showToast('✅', 'Outreach Started!', `Simulated WhatsApp & Email sent to ${lead.name}`);
+          showToast('✅', 'Outreach Sent!', `Trained opener sent to ${lead.name}`);
           loadData();
           return;
         }
@@ -482,8 +1570,10 @@
     }
 
     async function startAllOutreach() {
-      showToast('⏳', 'Starting Bulk Outreach', 'Contacting all new leads...');
+      showToast('⏳', 'Starting Bulk Outreach', 'Contacting all new leads with trained profile...');
       try {
+        const train = getTrainingConfig();
+
         if (staticMode) {
           const leads = await ensureStaticLeads();
           let count = 0;
@@ -491,21 +1581,21 @@
           for (const lead of leads) {
             if (lead.status === 'new') {
               const firstName = lead.name.split(' ')[0];
-              const pain = (lead.pain_points && lead.pain_points[0]) || 'digital payments';
+              const pain = (lead.pain_points && lead.pain_points[0]) || 'payments';
               lead.status = 'contacted';
               lead.qualification = 'warm';
               lead.last_contacted = now;
               lead.conversation_history = lead.conversation_history || [];
               lead.conversation_history.push({
                 role: 'agent',
-                message: `Namaste ${firstName} ji! 🙏 Main Paytm AI Sales Teammate hun. ${lead.business} ke liye Paytm QR + Soundbox se "${pain}" solve karna bahut aasan hai. Kya hum is week ek quick demo rakhein?`,
+                message: `Namaste ${firstName} ji! 🙏 Main ${train.brand} ka AI Sales Teammate hun. ${lead.business} ke liye ${train.product} se "${pain}" ka issue turant resolve ho sakta hai. Kya is week ek quick demo schedule karein?`,
                 timestamp: now
               });
               count++;
             }
           }
           saveStaticLeads(leads);
-          showToast('✅', 'Bulk Outreach Done!', `Contacted ${count} new lead(s) in demo mode.`);
+          showToast('✅', 'Bulk Outreach Done!', `Contacted ${count} new lead(s) with ${train.brand} profile.`);
           loadData();
           return;
         }
@@ -520,8 +1610,10 @@
     }
 
     async function runFollowUps() {
-      showToast('⏳', 'Running Follow-ups', 'Checking all leads...');
+      showToast('⏳', 'Running Follow-ups', 'Evaluating follow-up cadence...');
       try {
+        const train = getTrainingConfig();
+
         if (staticMode) {
           const leads = await ensureStaticLeads();
           let count = 0;
@@ -535,14 +1627,14 @@
               lead.conversation_history = lead.conversation_history || [];
               lead.conversation_history.push({
                 role: 'agent',
-                message: `Hi ${firstName} ji, gentle follow-up from Paytm Business! ${lead.business} ke liye abhi special zero-installation Soundbox offer chal raha hai. Batayein kab baat kar sakte hain?`,
+                message: `Hi ${firstName} ji, gentle follow-up from ${train.brand}! ${lead.business} ke liye special offer abhi active hai (${train.pricing.split(',')[0]}). Batayein kab free hain ek quick 5-min talk ke liye?`,
                 timestamp: now
               });
               count++;
             }
           }
           saveStaticLeads(leads);
-          showToast('✅', 'Follow-ups Complete!', `Sent ${count} follow-up(s) in demo mode`);
+          showToast('✅', 'Follow-ups Complete!', `Sent ${count} follow-up(s)`);
           loadData();
           return;
         }
@@ -561,20 +1653,46 @@
       const message = document.getElementById('sim-message').value.trim();
 
       if (!leadId || !message) {
-        showToast('⚠️', 'Missing Info', 'Please select a lead and type a message');
+        showToast('⚠️', 'Missing Info', 'Please select a lead and enter a reply');
         return;
       }
 
-      showToast('⏳', 'Processing Reply', 'AI is analyzing and responding...');
+      showToast('⏳', 'Analyzing Reply', 'AI teammate is reasoning with trained knowledge base...');
       try {
+        const train = getTrainingConfig();
+        const persona = getPersonaConfig();
+
         if (staticMode) {
           const leads = await ensureStaticLeads();
           const lead = leads.find(l => l.id === leadId);
           if (!lead) return;
-          const result = simulateAgentResponse(lead, message);
+
+          const evalResult = evaluateSimulatedAgentReply(message, train, persona);
+          
+          if (evalResult.state === 'Escalated 🚨') {
+            lead.status = 'escalated';
+            lead.qualification = 'hot';
+            lead.assigned_human_rep = 'Vikram Mehta (Senior Closer)';
+          } else if (evalResult.state === 'Hot Deal 🔥' || evalResult.state === 'Hot Lead 🔥') {
+            lead.status = 'demo_scheduled';
+            lead.qualification = 'hot';
+          } else if (evalResult.state === 'Cold Lead ❄️') {
+            lead.status = 'closed_lost';
+            lead.qualification = 'cold';
+          } else {
+            lead.status = 'in_conversation';
+            lead.qualification = lead.qualification || 'warm';
+          }
+
+          const now = new Date().toISOString();
+          lead.conversation_history = lead.conversation_history || [];
+          lead.conversation_history.push({ role: 'merchant', message, timestamp: now });
+          lead.conversation_history.push({ role: 'agent', message: evalResult.reply, timestamp: new Date(Date.now() + 500).toISOString() });
+          lead.last_contacted = now;
+
           saveStaticLeads(leads);
           document.getElementById('sim-message').value = '';
-          showToast('🤖', 'AI Responded!', `Action: ${result.action} | Lead: ${result.qualification || '?'}`);
+          showToast('🤖', 'AI Responded!', `Action: ${evalResult.nextAction.substring(0, 32)}...`);
           loadData();
           setTimeout(() => viewConversation(leadId), 300);
           return;
@@ -587,29 +1705,20 @@
         });
         const data = await res.json();
         document.getElementById('sim-message').value = '';
-        showToast('🤖', 'AI Responded!',
-          `Action: ${data.action_taken || 'processed'} | Lead: ${data.qualification || '?'}`);
+        showToast('🤖', 'AI Responded!', `Action: ${data.action_taken || 'processed'}`);
         loadData();
-        if (data.lead_id) setTimeout(() => viewConversation(data.lead_id), 500);
+        if (data.lead_id) setTimeout(() => viewConversation(data.lead_id), 400);
       } catch (e) {
         showToast('❌', 'Error', e.message);
       }
     }
 
-    async function resetDemo() {
-      if (!confirm('Reset ALL leads to new status? This clears all conversation history.')) return;
+    async function resetDemo(confirmPrompt = true) {
+      if (confirmPrompt && !confirm('Reset ALL demo leads and history? This resets to the fresh 10 leads.')) return;
       try {
-        if (staticMode) {
-          localStorage.removeItem(STORAGE_KEY);
-          await ensureStaticLeads();
-          showToast('🔄', 'Demo Reset!', 'All leads reset from data/leads.json');
-          loadData();
-          return;
-        }
-
-        const res = await fetch(`${API}/api/demo/reset`);
-        const data = await res.json();
-        showToast('🔄', 'Demo Reset!', data.message);
+        localStorage.removeItem(STORAGE_KEY);
+        await ensureStaticLeads();
+        showToast('🔄', 'Demo Reset!', 'All leads reset to fresh state');
         loadData();
       } catch (e) {
         showToast('❌', 'Error', e.message);
@@ -617,7 +1726,6 @@
     }
 
     // ── Conversation Modal ────────────────────────────────────────────
-
     async function viewConversation(leadId) {
       try {
         let lead;
@@ -643,7 +1751,7 @@
         `;
 
         document.getElementById('modal-footer-status').textContent =
-          lead.assigned_human_rep ? `Assigned to: ${lead.assigned_human_rep}` : '';
+          lead.assigned_human_rep ? `🚨 Assigned to Human Rep: ${lead.assigned_human_rep}` : '';
 
         const chatEl = document.getElementById('modal-chat');
         const history = lead.conversation_history || [];
@@ -652,8 +1760,8 @@
           chatEl.innerHTML = `
             <div class="text-center py-8">
               <div class="text-4xl mb-3">💬</div>
-              <p class="text-gray-400 text-sm">No messages yet.</p>
-              <p class="text-gray-300 text-xs mt-1">Start outreach to begin the conversation.</p>
+              <p class="text-gray-400 text-sm font-semibold">No messages yet.</p>
+              <p class="text-gray-400 text-xs mt-1">Click "Outreach" to initiate autonomous contact.</p>
             </div>
           `;
         } else {
@@ -666,10 +1774,10 @@
             return `
               <div class="flex ${isAgent ? 'justify-start' : 'justify-end'}">
                 <div class="max-w-[80%]">
-                  <div class="text-xs text-gray-400 mb-1 ${isAgent ? 'text-left' : 'text-right'}">
-                    ${isAgent ? '🤖 Paytm AI' : '👤 ' + lead.name.split(' ')[0]} · ${time}
+                  <div class="text-xs text-gray-400 mb-1 ${isAgent ? 'text-left' : 'text-right'} font-medium">
+                    ${isAgent ? '🤖 AI Teammate' : '👤 ' + lead.name.split(' ')[0]} · ${time}
                   </div>
-                  <div class="${isAgent ? 'chat-bubble-agent' : 'chat-bubble-merchant'} px-4 py-2.5 text-sm leading-relaxed">
+                  <div class="${isAgent ? 'chat-bubble-agent' : 'chat-bubble-merchant'} px-4 py-2.5 text-xs leading-relaxed shadow-sm">
                     ${msgText}
                   </div>
                 </div>
@@ -680,19 +1788,10 @@
           if (lead.pain_points && lead.pain_points.length > 0) {
             chatEl.innerHTML += `
               <div class="mt-4 pt-4 border-t border-gray-200">
-                <p class="text-xs text-gray-400 font-semibold mb-2">🎯 Lead Pain Points:</p>
-                <div class="flex flex-wrap gap-2">
-                  ${lead.pain_points.map(p => `<span class="bg-red-50 text-red-600 text-xs px-2 py-1 rounded-full border border-red-100">${p}</span>`).join('')}
+                <p class="text-xs text-gray-400 font-bold mb-2">🎯 Lead Pain Points:</p>
+                <div class="flex flex-wrap gap-1.5">
+                  ${lead.pain_points.map(p => `<span class="bg-rose-50 text-rose-700 text-[11px] px-2.5 py-1 rounded-full border border-rose-200">${p}</span>`).join('')}
                 </div>
-              </div>
-            `;
-          }
-
-          if (lead.notes) {
-            chatEl.innerHTML += `
-              <div class="mt-3">
-                <p class="text-xs text-gray-400 font-semibold mb-1">📝 Notes:</p>
-                <p class="text-xs text-gray-500 bg-yellow-50 rounded p-2">${lead.notes.replace(/\n/g, '<br>')}</p>
               </div>
             `;
           }
@@ -701,7 +1800,7 @@
         setTimeout(() => { chatEl.scrollTop = chatEl.scrollHeight; }, 100);
         document.getElementById('modal-overlay').classList.add('active');
       } catch (e) {
-        showToast('❌', 'Error', 'Could not load conversation');
+        showToast('❌', 'Error', 'Could not open conversation');
         console.error(e);
       }
     }
@@ -712,30 +1811,67 @@
       }
     }
 
-    // ── Toast ─────────────────────────────────────────────────────────
-
+    // ── Toast Utility ─────────────────────────────────────────────────
     let toastTimeout = null;
     function showToast(icon, title, msg) {
-      document.getElementById('toast-icon').textContent = icon;
-      document.getElementById('toast-title').textContent = title;
-      document.getElementById('toast-msg').textContent = msg;
-      const el = document.getElementById('toast');
-      el.classList.remove('hidden');
+      const iconEl = document.getElementById('toast-icon');
+      const titleEl = document.getElementById('toast-title');
+      const msgEl = document.getElementById('toast-msg');
+      const toastEl = document.getElementById('toast');
+
+      if (!toastEl) return;
+      iconEl.textContent = icon;
+      titleEl.textContent = title;
+      msgEl.textContent = msg;
+
+      toastEl.classList.remove('hidden');
       if (toastTimeout) clearTimeout(toastTimeout);
-      toastTimeout = setTimeout(() => el.classList.add('hidden'), 4000);
+      toastTimeout = setTimeout(() => toastEl.classList.add('hidden'), 4000);
     }
 
-    // ── Init ──────────────────────────────────────────────────────────
-
+    // ── Global Initializer ────────────────────────────────────────────
     async function loadData() {
       await Promise.all([loadStats(), loadLeads()]);
     }
 
-    loadData();
-    autoRefreshInterval = setInterval(loadData, 10000);
+    window.addEventListener('DOMContentLoaded', async () => {
+      // 1. Load trained configs into form
+      const train = getTrainingConfig();
+      if (document.getElementById('train-brand')) {
+        document.getElementById('train-brand').value = train.brand || 'Paytm for Business';
+        document.getElementById('train-vertical').value = train.vertical || 'Fintech & Merchant Payments';
+        document.getElementById('train-product').value = train.product || 'Paytm Soundbox 4G';
+        document.getElementById('train-icp').value = train.icp || '';
+        document.getElementById('train-pricing').value = train.pricing || '';
+        document.getElementById('train-objections').value = train.objections || '';
+        updateLiveJSON();
+      }
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeModal();
+      // 2. Load persona into form
+      const persona = getPersonaConfig();
+      const radio = document.querySelector(`input[name="agent-tone"][value="${persona.tone}"]`);
+      if (radio) radio.checked = true;
+      if (document.getElementById('agent-language')) document.getElementById('agent-language').value = persona.language || 'auto';
+      if (document.getElementById('agent-goal')) document.getElementById('agent-goal').value = persona.goal || 'demo';
+
+      // 3. Check URL hash or default to Intro
+      const hash = window.location.hash.replace('#', '');
+      if (['intro', 'train', 'persona', 'simulator', 'dashboard'].includes(hash)) {
+        switchTab(hash);
+      } else {
+        switchTab('intro');
+      }
+
+      // 4. Preload leads & stats in background
+      await loadData();
+      autoRefreshInterval = setInterval(() => {
+        if (currentTab === 'dashboard') loadData();
+      }, 10000);
+
+      // Keyboard escape closes modal
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+      });
     });
   </script>
 </body>
