@@ -953,10 +953,15 @@
         <div class="px-5 py-3 border-b border-slate-200 bg-slate-50/70 flex flex-wrap justify-between items-center gap-3">
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-slate-800 tracking-tight">Active Merchants</span>
-            <span class="font-mono text-[11px] text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded-full font-bold">10 Profiles</span>
+            <span id="profiles-count-badge" class="font-mono text-[11px] text-slate-600 bg-slate-200/80 px-2 py-0.5 rounded-full font-bold">0 Profiles</span>
           </div>
-          <div class="text-xs text-slate-500 font-medium">
-            Channels: <span class="text-emerald-700 font-semibold">WhatsApp Business</span> &amp; <span class="text-blue-700 font-semibold">Corporate Email</span>
+          <div class="flex items-center gap-3">
+            <div class="text-xs text-slate-500 font-medium">
+              Channels: <span class="text-emerald-700 font-semibold">WhatsApp Business</span> &amp; <span class="text-blue-700 font-semibold">Corporate Email</span>
+            </div>
+            <button onclick="clearAllLeads()" class="text-xs text-slate-400 hover:text-rose-600 font-medium border border-slate-200 hover:border-rose-300 rounded px-2 py-0.5 transition">
+              Clear All
+            </button>
           </div>
         </div>
 
@@ -984,7 +989,7 @@
 
         <!-- Table Footer / Pagination Metadata -->
         <div class="px-5 py-3 border-t border-slate-200 bg-slate-50/50 flex flex-wrap justify-between items-center text-xs text-slate-500">
-          <span>Showing 1 to 10 of 10 merchants</span>
+          <span id="profiles-showing-label">Showing 0 merchants</span>
           <div class="flex gap-1">
             <button class="px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-700 font-semibold text-xs hover:bg-slate-50">1</button>
           </div>
@@ -999,7 +1004,7 @@
   <!-- ========================================================================= -->
   <script>
     const API = '';
-    const STORAGE_KEY = 'merchantconnect_demo_leads_v1';
+    const STORAGE_KEY = 'merchantconnect_live_leads_v2';
     const TRAINING_STORAGE_KEY = 'merchantconnect_training_config_v1';
     const PERSONA_STORAGE_KEY = 'merchantconnect_persona_config_v1';
     
@@ -1409,23 +1414,17 @@
     // ── Static Leads & Manager Dashboard Logic ────────────────────────
     async function ensureStaticLeads() {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
+      if (saved !== null) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          return [];
+        }
       }
-      try {
-        const res = await fetch('./data/leads.json');
-        const leads = await res.json();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
-        return leads;
-      } catch (e) {
-        const fallback = [
-          { id: "LEAD001", name: "Ramesh Sharma", business: "Sharma General Store", city: "Delhi", phone: "+919876543210", email: "ramesh@example.com", business_type: "Kirana Store", monthly_revenue_estimate: "2-5 Lakh", current_payment_method: "Cash only", pain_points: ["No digital payments", "Losing customers who want UPI"], status: "new", qualification: null, conversation_history: [], last_contacted: null, follow_up_count: 0 },
-          { id: "LEAD002", name: "Sunita Patel", business: "Patel Medical & General", city: "Ahmedabad", phone: "+919823456789", email: "sunita.patel@example.com", business_type: "Medical Store", monthly_revenue_estimate: "5-10 Lakh", current_payment_method: "Cash + some UPI", pain_points: ["No proper billing", "Can't track daily sales"], status: "new", qualification: null, conversation_history: [], last_contacted: null, follow_up_count: 0 },
-          { id: "LEAD003", name: "Mohammed Irfan", business: "Irfan's Biryani House", city: "Hyderabad", phone: "+919912345678", email: "irfan.biryani@example.com", business_type: "Restaurant", monthly_revenue_estimate: "8-15 Lakh", current_payment_method: "Cash + UPI", pain_points: ["Long billing queues"], status: "new", qualification: null, conversation_history: [], last_contacted: null, follow_up_count: 0 }
-        ];
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
-        return fallback;
-      }
+      // Start fresh with an empty CRM pipeline (no hardcoded/fake profiles)
+      const initialLeads = [];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialLeads));
+      return initialLeads;
     }
 
     function saveStaticLeads(leads) {
@@ -1541,6 +1540,23 @@
     }
 
     // ── Leads Table Loader ────────────────────────────────────────────
+    
+    async function deleteLead(leadId) {
+      if (!confirm('Remove this merchant lead from the pipeline?')) return;
+      const leads = await ensureStaticLeads();
+      const updated = leads.filter(l => l.id !== leadId);
+      saveStaticLeads(updated);
+      showToast('✓', 'Lead Removed', 'Merchant removed from pipeline');
+      await loadData();
+    }
+
+    async function clearAllLeads() {
+      if (!confirm('Clear all merchant leads from the pipeline?')) return;
+      saveStaticLeads([]);
+      showToast('✓', 'Pipeline Cleared', 'All merchant records removed');
+      await loadData();
+    }
+
     async function loadLeads() {
       try {
         if (!staticMode) {
@@ -1567,8 +1583,27 @@
 
         if (!tbody) return;
 
+        const countBadge = document.getElementById('profiles-count-badge');
+        const countLabel = document.getElementById('profiles-showing-label');
+        const totalCount = (leadsCache || []).length;
+        if (countBadge) countBadge.textContent = `${totalCount} Profile${totalCount === 1 ? '' : 's'}`;
+        if (countLabel) countLabel.textContent = `Showing ${totalCount} of ${totalCount} merchants`;
+
         if (!leadsCache || leadsCache.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400 font-mono">No merchant accounts found</td></tr>';
+          tbody.innerHTML = `<tr>
+            <td colspan="8" class="text-center py-12">
+              <div class="max-w-xs mx-auto text-center space-y-2">
+                <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mx-auto text-slate-400">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                </div>
+                <p class="text-xs font-bold text-slate-700">No active merchant accounts</p>
+                <p class="text-[11px] text-slate-400 leading-relaxed">Add real merchant leads using the "Add Merchant Lead" button above.</p>
+                <button onclick="openAddLeadModal()" class="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#002970] bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition">
+                  + Add First Merchant
+                </button>
+              </div>
+            </td>
+          </tr>`;
           return;
         }
 
@@ -1617,6 +1652,10 @@
                 <button onclick="viewConversation('${lead.id}')"
                   class="bg-white hover:bg-slate-100 text-slate-700 px-2.5 py-1 rounded text-xs font-semibold border border-slate-300 transition shadow-2xs">
                   Transcript
+                </button>
+                <button onclick="deleteLead('${lead.id}')" title="Delete merchant lead"
+                  class="text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1 rounded transition text-xs font-bold">
+                  ✕
                 </button>
               </div>
             </td>
@@ -2022,6 +2061,35 @@
       });
     });
   </script>
+    <!-- CONVERSATION TRANSCRIPT MODAL (CRM LOG VIEWER) -->
+  <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 flex flex-col max-h-[85vh] overflow-hidden border border-slate-300" onclick="event.stopPropagation()">
+      <div class="bg-[#002970] text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs uppercase tracking-wider text-blue-200 font-semibold font-mono">CRM INTERACTION LOG</span>
+            <span class="text-xs text-blue-300">·</span>
+            <span id="modal-subtitle" class="text-xs text-blue-200 font-mono"></span>
+          </div>
+          <h2 id="modal-title" class="font-bold text-base mt-0.5"></h2>
+        </div>
+        <button onclick="closeModal()" class="text-white hover:text-blue-200 text-2xl leading-none font-bold">&times;</button>
+      </div>
+
+      <div id="modal-info" class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex-shrink-0 flex flex-wrap gap-4 text-xs text-slate-700 font-medium"></div>
+
+      <div id="modal-chat" class="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-slate-100/60">
+        <p class="text-center text-slate-400 text-xs font-mono">Loading conversation transcript...</p>
+      </div>
+
+      <div class="px-6 py-3 bg-white border-t border-slate-200 flex-shrink-0 text-xs text-slate-500 flex justify-between items-center">
+        <span id="modal-footer-status" class="font-bold text-rose-700 font-mono"></span>
+        <button onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-1.5 rounded-md transition text-xs border border-slate-300">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
   <!-- Add Merchant Lead Modal -->
   <div id="add-lead-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
