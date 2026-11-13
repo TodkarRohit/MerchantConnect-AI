@@ -163,12 +163,12 @@
             <span class="text-emerald-400 font-semibold font-mono text-[11px]">SLA &lt; 4.8s</span>
           </div>
 
-          <!-- Reset Demo Data Button -->
-          <button onclick="resetDemo(true)" title="Reset entire database and cached leads" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 hover:text-white border border-rose-400/30 px-3 py-1.5 rounded-md text-xs font-semibold transition flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <!-- Add Merchant Lead Button -->
+          <button onclick="openAddLeadModal()" title="Add a new merchant lead into pipeline" class="bg-[#00BAF2] hover:bg-sky-400 text-slate-950 font-bold px-3 py-1.5 rounded-md text-xs transition flex items-center gap-1.5 shadow-xs">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
             </svg>
-            <span>Reset Demo</span>
+            <span>Add Merchant Lead</span>
           </button>
         </div>
       </div>
@@ -281,7 +281,7 @@
 
         <div class="bg-white rounded-lg p-5 border border-slate-200 shadow-xs">
           <div class="flex items-center justify-between text-slate-500 mb-2">
-            <span class="text-xs font-semibold uppercase tracking-wider">Lead-to-Demo Conversion</span>
+            <span class="text-xs font-semibold uppercase tracking-wider">Lead-to-Sales Conversion</span>
             <span class="text-indigo-600 font-mono text-xs font-bold bg-indigo-50 px-2 py-0.5 rounded">3.4x Lift</span>
           </div>
           <div class="text-2xl font-bold text-slate-900 font-mono tracking-tight">28.4%</div>
@@ -386,7 +386,7 @@
               <div class="w-6 h-6 rounded bg-slate-100 text-slate-700 font-mono font-bold flex items-center justify-center flex-shrink-0 text-[11px]">04</div>
               <div>
                 <h4 class="font-bold text-slate-900">SLA-Guaranteed Closer Transfer</h4>
-                <p class="text-slate-500 mt-0.5">Dispatches field rep or schedules in-store hardware demo with verified merchant store address and Aadhaar/GST details.</p>
+                <p class="text-slate-500 mt-0.5">Dispatches field rep or schedules in-store hardware onboarding with verified merchant store address and Aadhaar/GST details.</p>
               </div>
             </div>
           </div>
@@ -646,7 +646,7 @@
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">Primary Call-to-Action Objective</label>
             <select id="agent-goal" onchange="savePersonaConfig()" class="w-full text-xs rounded-md px-3 py-2 border border-slate-300 font-medium">
-              <option value="demo">Book In-Store / Video Product Demonstration</option>
+              <option value="demo">Book In-Store Onboarding & Product Activation</option>
               <option value="dispatch">Collect Store Address for Immediate Device Dispatch</option>
               <option value="rep_call">Schedule Callback with Senior Closer</option>
               <option value="signup">Deliver Digital Paperless KYC Link</option>
@@ -795,8 +795,8 @@
               <button onclick="sendSimQuick('Haan interested hun! Pricing aur soundbox rental kya hai?')" class="bg-white hover:bg-slate-100 text-slate-800 text-[11px] font-medium px-2.5 py-1 rounded border border-slate-200 transition shadow-2xs">
                 Inquiry (Hinglish)
               </button>
-              <button onclick="sendSimQuick('Can you please share the pricing breakdown and schedule a demo?')" class="bg-white hover:bg-slate-100 text-slate-800 text-[11px] font-medium px-2.5 py-1 rounded border border-slate-200 transition shadow-2xs">
-                Demo Request (English)
+              <button onclick="sendSimQuick('Can you please share the pricing breakdown and onboarding steps?')" class="bg-white hover:bg-slate-100 text-slate-800 text-[11px] font-medium px-2.5 py-1 rounded border border-slate-200 transition shadow-2xs">
+                Pricing & Onboarding (English)
               </button>
               <button onclick="sendSimQuick('Please speak only in English. I do not follow Hindi.')" class="bg-white hover:bg-slate-100 text-slate-800 text-[11px] font-medium px-2.5 py-1 rounded border border-slate-200 transition shadow-2xs">
                 Language Override
@@ -867,7 +867,7 @@
               <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
                 <div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Prescribed Autonomous Action</div>
                 <p id="telemetry-next-action" class="text-xs font-semibold text-slate-900 leading-snug">
-                  Provide ₹125/mo rental breakdown & propose 5-minute in-store Soundbox demo.
+                  Provide ₹125/mo rental breakdown & schedule in-store Soundbox onboarding.
                 </p>
               </div>
 
@@ -885,7 +885,7 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-slate-400 font-sans">Primary Conversion SLA:</span>
-                <span id="telemetry-goal" class="text-slate-800">In-Store Demo</span>
+                <span id="telemetry-goal" class="text-slate-800">In-Store Onboarding</span>
               </div>
             </div>
 
@@ -992,103 +992,7 @@
 
       </div>
 
-      <!-- Merchant Reply Simulation Testing Panel -->
-      <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs space-y-3">
-        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-            <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-            Simulate Merchant Inbound Response to Active Lead
-          </h3>
-          <span class="text-[11px] font-mono text-slate-400">TESTING_TOOL</span>
-        </div>
-
-        <div class="flex gap-3 flex-wrap">
-          <select id="sim-lead-select" class="border border-slate-300 rounded-lg px-3 py-2 text-xs flex-1 min-w-48 font-medium">
-            <option value="">Select a lead profile...</option>
-          </select>
-          <input type="text" id="sim-message" placeholder="Type merchant response (e.g., 'Haan, interested hun!')" class="border border-slate-300 rounded-lg px-3 py-2 text-xs flex-1 min-w-64 font-medium" onkeypress="if(event.key==='Enter') simulateReply()" />
-          <button onclick="simulateReply()" class="bg-[#002970] hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow-xs">
-            <span>Process Turn</span>
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-          </button>
-        </div>
-
-        <div class="flex flex-wrap gap-1.5 items-center text-xs text-slate-500 pt-1">
-          <span class="text-[11px] font-semibold text-slate-600 mr-1">Quick prompts:</span>
-          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded text-xs transition" onclick="document.getElementById('sim-message').value='Haan, interested hun! Batao aur.'">Interested</button>
-          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded text-xs transition" onclick="document.getElementById('sim-message').value='Demo dikhao, kab available ho?'">Request Demo</button>
-          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded text-xs transition" onclick="document.getElementById('sim-message').value='Pricing kya hai? Contract kya rahega?'">Ask Pricing</button>
-          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded text-xs transition" onclick="document.getElementById('sim-message').value='Nahi chahiye, busy hun'">Not Interested</button>
-          <button class="bg-slate-100 hover:bg-slate-200 text-slate-800 px-2 py-1 rounded text-xs transition" onclick="document.getElementById('sim-message').value='Soundbox ke baare mein batao, kitna charge hai?'">Soundbox Rental</button>
-        </div>
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- ========================================================================= -->
-  <!-- ENTERPRISE FOOTER -->
-  <!-- ========================================================================= -->
-  <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <span class="font-bold text-slate-800">MerchantConnect AI</span>
-        <span>·</span>
-        <span>Paytm Build for India AI Hackathon</span>
-        <span>·</span>
-        <span class="font-mono text-slate-400">v2.4.0-enterprise</span>
-      </div>
-      <div class="flex items-center gap-4">
-        <a href="https://github.com/TodkarRohit/MerchantConnect-AI" target="_blank" class="hover:text-slate-900 transition flex items-center gap-1 font-medium">
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
-          <span>Repository</span>
-        </a>
-        <button onclick="switchTab('intro')" class="hover:text-slate-900 transition">Overview</button>
-        <button onclick="switchTab('train')" class="hover:text-slate-900 transition">Knowledge Base</button>
-        <button onclick="switchTab('dashboard')" class="hover:text-slate-900 transition">CRM Pipeline</button>
-      </div>
-    </div>
-  </footer>
-
-  <!-- ========================================================================= -->
-  <!-- CONVERSATION TRANSCRIPT MODAL (CRM LOG VIEWER) -->
-  <!-- ========================================================================= -->
-  <div id="modal-overlay" class="modal-overlay" onclick="closeModal(event)">
-    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 flex flex-col max-h-[85vh] overflow-hidden border border-slate-300" onclick="event.stopPropagation()">
       
-      <!-- Modal Header -->
-      <div class="bg-[#002970] text-white px-6 py-4 flex items-center justify-between flex-shrink-0">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs uppercase tracking-wider text-blue-200 font-semibold font-mono">CRM INTERACTION LOG</span>
-            <span class="text-xs text-blue-300">·</span>
-            <span id="modal-subtitle" class="text-xs text-blue-200 font-mono"></span>
-          </div>
-          <h2 id="modal-title" class="font-bold text-base mt-0.5"></h2>
-        </div>
-        <button onclick="closeModal()" class="text-white hover:text-blue-200 text-2xl leading-none font-bold">&times;</button>
-      </div>
-
-      <!-- Lead Attributes Bar -->
-      <div id="modal-info" class="bg-slate-50 px-6 py-3 border-b border-slate-200 flex-shrink-0 flex flex-wrap gap-4 text-xs text-slate-700 font-medium">
-      </div>
-
-      <!-- Transcript Messages Scroll Area -->
-      <div id="modal-chat" class="flex-1 overflow-y-auto px-6 py-4 space-y-3 bg-slate-100/60">
-        <p class="text-center text-slate-400 text-xs font-mono">Loading conversation transcript...</p>
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="px-6 py-3 bg-white border-t border-slate-200 flex-shrink-0 text-xs text-slate-500 flex justify-between items-center">
-        <span id="modal-footer-status" class="font-bold text-rose-700 font-mono"></span>
-        <button onclick="closeModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-1.5 rounded-md transition text-xs border border-slate-300">
-          Close
-        </button>
-      </div>
-
-    </div>
-  </div>
 
   <!-- ========================================================================= -->
   <!-- JAVASCRIPT APPLICATION CORE -->
@@ -1308,12 +1212,12 @@
       document.getElementById('telemetry-tone').textContent = toneLabels[persona.tone] || 'Consultative Partner';
       
       const goalLabels = {
-        demo: 'In-Store Product Demo',
+        demo: 'In-Store Onboarding',
         dispatch: 'Hardware Dispatch Confirmation',
         rep_call: 'Closer Phone Callback',
         signup: 'Digital Paperless KYC'
       };
-      document.getElementById('telemetry-goal').textContent = goalLabels[persona.goal] || 'In-Store Demo';
+      document.getElementById('telemetry-goal').textContent = goalLabels[persona.goal] || 'In-Store Onboarding';
 
       if (simHistory.length === 0) {
         const greeting = generateProactiveGreeting(train, persona);
@@ -1456,12 +1360,12 @@
 
       // Demo Request
       if (msg.includes('demo') || msg.includes('kab available')) {
-        sentiment = 'Hardware Demo Requested';
-        state = 'Hot (Demo Scheduled)';
+        sentiment = 'Hardware Onboarding Requested';
+        state = 'Hot (Onboarding Scheduled)';
         nextAction = 'Confirm in-store slot with field rep';
         reply = isEnglish
-          ? `We would love to demonstrate ${train.product}! We have demo slots available tomorrow at 11:00 AM or 4:30 PM. Which time suits you best?`
-          : `Bilkul ji! Hum kal subah 11:00 AM ya shaam 4:30 PM par aapki shop par live demo dikha sakte hain. Kaunsa time aapke liye best rahega?`;
+          ? `We would love to get you started with ${train.product}! Our team can visit tomorrow at 11:00 AM or 4:30 PM. Which time suits you best?`
+          : `Bilkul ji! Hum kal subah 11:00 AM ya shaam 4:30 PM par aapki shop par onboarding aur setup complete kar sakte hain. Kaunsa time aapke liye best rahega?`;
         return { reply, lang, sentiment, state, nextAction };
       }
 
@@ -1479,10 +1383,10 @@
       // Default contextual response
       sentiment = 'Product & Pricing Inquiry';
       state = 'Warm (Evaluating)';
-      nextAction = 'Deliver objection rebuttal & propose demo';
+      nextAction = 'Deliver objection rebuttal & propose onboarding';
       reply = isEnglish
         ? `Thank you for asking! For ${train.product}, our key advantage is: ${train.pricing}. Plus, ${train.objections.split(';')[0] || 'it saves both time and operational money'}. Would you like to review our 1-page summary?`
-        : `Zaroor batata hun ji! ${train.product} mein aapko milta hai: ${train.pricing}. Aur ${train.objections.split(';')[0] || 'is se payment ka sabhi jhanjhat khatam ho jata hai'}. Kya hum kal ek 5-minute ka quick demo arrange karein?`;
+        : `Zaroor batata hun ji! ${train.product} mein aapko milta hai: ${train.pricing}. Aur ${train.objections.split(';')[0] || 'is se payment ka sabhi jhanjhat khatam ho jata hai'}. Kya hum kal ek 5-minute ka quick setup call arrange karein?`;
 
       return { reply, lang, sentiment, state, nextAction };
     }
@@ -1562,7 +1466,7 @@
         'in_conversation': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">In Dialogue</span>',
         'follow_up_scheduled': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded">Follow-Up Due</span>',
         'follow_up_sent': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-orange-800 bg-orange-100 border border-orange-300 px-2 py-0.5 rounded">Followed Up</span>',
-        'demo_scheduled': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">Demo Booked</span>',
+        'demo_scheduled': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded">Onboarding Booked</span>',
         'escalated': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">Escalated (Rep)</span>',
         'converted': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">Converted</span>',
         'closed_lost': '<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">Closed Lost</span>'
@@ -1784,7 +1688,7 @@
               lead.conversation_history = lead.conversation_history || [];
               lead.conversation_history.push({
                 role: 'agent',
-                message: `Namaste ${firstName} ji! 🙏 Main ${train.brand} ka AI Sales Teammate hun. ${lead.business} ke liye ${train.product} se "${pain}" ka issue turant resolve ho sakta hai. Kya is week ek quick demo schedule karein?`,
+                message: `Namaste ${firstName} ji! 🙏 Main ${train.brand} ka AI Sales Teammate hun. ${lead.business} ke liye ${train.product} se "${pain}" ka issue turant resolve ho sakta hai. Kya is week ek quick setup visit schedule karein?`,
                 timestamp: now
               });
               count++;
@@ -1910,7 +1814,7 @@
     }
 
     async function resetDemo(confirmPrompt = true) {
-      if (confirmPrompt && !confirm('Reset all demo lead histories and local cached interactions?')) return;
+      if (confirmPrompt && !confirm('Reset all lead histories and local cached interactions?')) return;
       try {
         localStorage.removeItem(STORAGE_KEY);
         await ensureStaticLeads();
@@ -2026,6 +1930,59 @@
     }
 
     // ── Global Initializer ────────────────────────────────────────────
+    
+    function openAddLeadModal() {
+      const modal = document.getElementById('add-lead-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAddLeadModal() {
+      const modal = document.getElementById('add-lead-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function submitNewLead() {
+      const name = (document.getElementById('new-lead-name').value || '').trim();
+      const biz = (document.getElementById('new-lead-biz').value || '').trim();
+      const phone = (document.getElementById('new-lead-phone').value || '').trim();
+      const city = (document.getElementById('new-lead-city').value || '').trim();
+      const type = (document.getElementById('new-lead-type').value || '').trim() || 'Retail';
+      const vol = (document.getElementById('new-lead-vol').value || '').trim() || '2-5 Lakh';
+
+      if (!name || !biz || !phone || !city) {
+        showToast('✕', 'Missing Fields', 'Please fill in Name, Store Name, Phone, and City.');
+        return;
+      }
+
+      const leads = await ensureStaticLeads();
+      const newId = `LEAD${String(leads.length + 1).padStart(3, '0')}`;
+      const newLead = {
+        id: newId,
+        name: name,
+        business: biz,
+        city: city,
+        phone: phone,
+        email: `${name.toLowerCase().replace(/\s+/g, '')}@example.com`,
+        business_type: type,
+        monthly_revenue_estimate: vol,
+        current_payment_method: 'Cash only',
+        pain_points: ['Digital payment setup', 'Instant settlement'],
+        status: 'new',
+        qualification: null,
+        conversation_history: [],
+        last_contacted: null,
+        follow_up_count: 0
+      };
+
+      leads.unshift(newLead);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(leads));
+      closeAddLeadModal();
+      showToast('✓', 'Lead Ingested', `Added ${biz} into active pipeline`);
+      await loadData();
+    }
+
     async function loadData() {
       await Promise.all([loadStats(), loadLeads()]);
     }
@@ -2065,5 +2022,51 @@
       });
     });
   </script>
+  <!-- Add Merchant Lead Modal -->
+  <div id="add-lead-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-md w-full p-6 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="text-sm font-extrabold text-slate-900">Add New Merchant Lead</h3>
+        <button onclick="closeAddLeadModal()" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Merchant Owner Name *</label>
+          <input type="text" id="new-lead-name" placeholder="e.g. Ramesh Sharma" class="w-full rounded-lg px-3 py-2 border border-slate-300" />
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Store / Business Name *</label>
+          <input type="text" id="new-lead-biz" placeholder="e.g. Sharma General Store" class="w-full rounded-lg px-3 py-2 border border-slate-300" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Phone (WhatsApp) *</label>
+            <input type="text" id="new-lead-phone" placeholder="+91 98765 43210" class="w-full rounded-lg px-3 py-2 border border-slate-300 font-mono" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">City *</label>
+            <input type="text" id="new-lead-city" placeholder="e.g. Delhi" class="w-full rounded-lg px-3 py-2 border border-slate-300" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Store Category</label>
+            <input type="text" id="new-lead-type" placeholder="e.g. Kirana Store" class="w-full rounded-lg px-3 py-2 border border-slate-300" />
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Est. Monthly Volume</label>
+            <input type="text" id="new-lead-vol" placeholder="e.g. 2-5 Lakh" class="w-full rounded-lg px-3 py-2 border border-slate-300" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeAddLeadModal()" class="px-4 py-2 rounded-lg text-xs font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition">Cancel</button>
+        <button onclick="submitNewLead()" class="px-4 py-2 rounded-lg text-xs font-bold bg-[#002970] text-white hover:bg-blue-900 transition shadow-xs">Add to Pipeline</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
